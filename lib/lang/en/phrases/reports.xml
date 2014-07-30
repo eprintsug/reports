@@ -7,5 +7,9 @@
 <epp:phrase id="Plugin/Screen/Report:title">Reports</epp:phrase>
 <epp:phrase id="Plugin/Screen/Report:no_reports">No available reports</epp:phrase>
 
+<!-- the Example reports -->
+<epp:phrase id="Plugin/Screen/Report/Example:title">Example</epp:phrase>
+<epp:phrase id="Plugin/Screen/Report/Example/Articles:title">Articles</epp:phrase>
+<epp:phrase id="Plugin/Screen/Report/Example/ConferenceItems:title">Conference Items</epp:phrase>
 
 </epp:phrases>

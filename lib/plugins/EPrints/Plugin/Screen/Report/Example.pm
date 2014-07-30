@@ -94,33 +94,4 @@ sub get_related_objects
 	return $objects;
 }
 
-# All outputs entered on the Books, Journals or Conferences worksheets must have at least one of the following unique identifiers: ISBN, ISSN, DOI, UKPMC
-sub validate_dataobj
-{
-	my( $plugin, $dataobj ) = @_;
-
-	my @problems; 
-
-	# random decision to decide if a data-obj is valid or not
-
-	# of course on a "real" report, you would need to set-up proper validation rules, perhaps defined by some national agencies such as HEFCE, RCUK, ...
-
-	if( int( rand( 100 ) ) % 2 == 0 )
-	{
-		push @problems, "Problems detected!!";
-	} 
-
-	push @problems, $plugin->SUPER::validate_dataobj( $dataobj );
-
-	return @problems;
-}
-
-sub report_fields_order
-{
-	my( $plugin, $dataobj ) = @_;
-
-	return $plugin->SUPER::report_fields_order( $dataobj );
-}
-
-
 1;

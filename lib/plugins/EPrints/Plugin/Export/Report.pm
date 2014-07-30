@@ -32,7 +32,7 @@ sub initialise_fh
 	my $filename = ($plugin->{report}||'report')."_".EPrints::Time::iso_date().($plugin->{suffix}||".txt");
 
 	EPrints::Apache::AnApache::header_out(
-		$plugin->{session}->get_request,
+		$plugin->repository->get_request,
 			"Content-Disposition" => "attachment; filename=$filename"
 	);
 }
@@ -50,7 +50,7 @@ sub report_fields_order
 	my $report = $plugin->get_report();
 	return [] unless( defined $report );
 
-	$plugin->{report_fields_order} = $plugin->{session}->config( 'reports', $report, 'fields' );
+	$plugin->{report_fields_order} = $plugin->repository->config( 'reports', $report, 'fields' );
 
 	return $plugin->{report_fields_order};
 }
@@ -65,7 +65,7 @@ sub report_fields
 	my $report = $plugin->get_report();
 	return [] unless( defined $report );
 
-	$plugin->{report_fields} = $plugin->{session}->config( 'reports', $report, 'mappings' );
+	$plugin->{report_fields} = $plugin->repository->config( 'reports', $report, 'mappings' );
 
 	return $plugin->{report_fields};
 }
@@ -76,9 +76,9 @@ sub get_related_objects
 	my( $plugin, $dataobj ) = @_;
 
 	my $cmd = [ 'reports', $plugin->get_report, 'get_related_objects' ];
-        if( $plugin->{session}->can_call( @$cmd ) )
+        if( $plugin->repository->can_call( @$cmd ) )
         {
-		return $plugin->{session}->call( $cmd, $plugin->{session}, $dataobj ) || {};
+		return $plugin->repository->call( $cmd, $plugin->repository, $dataobj ) || {};
         }
 
 	# just pass the dataobj itself

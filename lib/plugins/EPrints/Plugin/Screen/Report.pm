@@ -150,7 +150,7 @@ sub validate_dataobj
 {
 	my( $plugin, $dataobj ) = @_;
 
-	my $session = $plugin->{session};
+	my $repo = $plugin->repository;
 
 	my $report_fields = $plugin->report_fields( $dataobj );
 	my $val_fields = $plugin->validate_fields( $dataobj );
@@ -160,7 +160,7 @@ sub validate_dataobj
 	my $valid_ds = {};
 	foreach my $dsid ( keys %$objects )
 	{
-		$valid_ds->{$dsid} = $session->dataset( $dsid );
+		$valid_ds->{$dsid} = $repo->dataset( $dsid );
 	}
 
 	my @problems;
@@ -180,13 +180,13 @@ sub validate_dataobj
 			};
 			if( $@ )
 			{
-				$session->log( "Validation Runtime error: $@" );
+				$repo->log( "Validation Runtime error: $@" );
 			}
 			next;
 		}
 		elsif( lc $v_field ne "required" )
 		{
-			$session->log( "Validation Runtime error: $v_field must be code ref or 'required'" );
+			$repo->log( "Validation Runtime error: $v_field must be code ref or 'required'" );
 			next;
 		}
 
@@ -202,7 +202,7 @@ sub validate_dataobj
 			};
 			if( $@ )
 			{
-				$session->log( "Validation Runtime error: $@" );
+				$repo->log( "Validation Runtime error: $@" );
 			}
 		}
 		elsif( $ep_field =~ /^([a-z_]+)\.([a-z_]+)$/ )
@@ -218,7 +218,7 @@ sub validate_dataobj
 			else
 			{
 				# dataset or field doesn't exist
-				$session->log( "Validation Runtime error: dataset $ds_id or field $ep_fieldname doesn't exist" );
+				$repo->log( "Validation Runtime error: dataset $ds_id or field $ep_fieldname doesn't exist" );
 			}
 		}
 
@@ -238,9 +238,9 @@ sub get_related_objects
 	my( $plugin, $dataobj ) = @_;
 
 	my $cmd = [ 'reports', $plugin->get_report, 'get_related_objects' ];
-        if( $plugin->{session}->can_call( @$cmd ) )
+        if( $plugin->repository->can_call( @$cmd ) )
         {
-		return $plugin->{session}->call( $cmd, $plugin->{session}, $dataobj ) || {};
+		return $plugin->repository->call( $cmd, $plugin->repository, $dataobj ) || {};
         }
 
 	# just pass the dataobj itself
@@ -259,7 +259,7 @@ sub report_fields_order
 	my $report = $plugin->get_report();
 	return [] unless( defined $report );
 
-	$plugin->{report_fields_order} = $plugin->{session}->config( 'reports', $report, 'fields' );
+	$plugin->{report_fields_order} = $plugin->repository->config( 'reports', $report, 'fields' );
 
 	return $plugin->{report_fields_order};
 }
@@ -274,7 +274,7 @@ sub report_fields
 	my $report = $plugin->get_report();
 	return [] unless( defined $report );
 
-	$plugin->{report_fields} = $plugin->{session}->config( 'reports', $report, 'mappings' );
+	$plugin->{report_fields} = $plugin->repository->config( 'reports', $report, 'mappings' );
 
 	return $plugin->{report_fields};
 }
@@ -288,7 +288,7 @@ sub validate_fields
 	my $report = $plugin->get_report();
 	return [] unless( defined $report );
 
-	$plugin->{validate_fields} = $plugin->{session}->config( 'reports', $report, 'validate' );
+	$plugin->{validate_fields} = $plugin->repository->config( 'reports', $report, 'validate' );
 
 	return $plugin->{validate_fields};
 }

@@ -24,7 +24,6 @@ sub output_list
         my( $plugin, %opts ) = @_;
        
 	# the appropriate Report::{report_id} plugin will build up the list: 
-	my $session = $plugin->{session};
 
 	# CSV header / field list
 	print join( ",", map { $plugin->escape_value( $_ ) } @{ $plugin->report_fields_order || [] } ) . "\n";
@@ -43,7 +42,7 @@ sub output_dataobj
 {
 	my( $plugin, $dataobj, $objects ) = @_;
 
-	my $session = $plugin->{session};
+	my $repo = $plugin->repository;
 
 	my $report_fields = $plugin->report_fields();
 
@@ -51,7 +50,7 @@ sub output_dataobj
 	my $valid_ds = {};
 	foreach my $dsid ( keys %$objects )
 	{
-		$valid_ds->{$dsid} = $session->dataset( $dsid );
+		$valid_ds->{$dsid} = $repo->dataset( $dsid );
 	}
 
 	# don't print out empty row so check that something's been done:
@@ -79,7 +78,7 @@ sub output_dataobj
 			};
 			if( $@ )
 			{
-				$session->log( "Report::CSV Runtime error: $@" );
+				$repo->log( "Report::CSV Runtime error: $@" );
 			}
 
 			next;

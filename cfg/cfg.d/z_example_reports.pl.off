@@ -1,0 +1,7 @@
+
+$c->{plugins}{"Screen::Report::Example"}{params}{disable} = 0;
+$c->{plugins}{"Screen::Report::Example::Articles"}{params}{disable} = 0;
+$c->{plugins}{"Screen::Report::Example::ConferenceItems"}{params}{disable} = 0;
+
+#$c->{plugins}{"Export::Report::CSV::ROS"}{params}{disable} = 0;
+

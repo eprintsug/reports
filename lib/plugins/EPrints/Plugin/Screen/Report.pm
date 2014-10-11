@@ -205,7 +205,7 @@ sub validate_dataobj
 				$repo->log( "Validation Runtime error: $@" );
 			}
 		}
-		elsif( $ep_field =~ /^([a-z_]+)\.([a-z_]+)$/ )
+		elsif( $ep_field =~ /^([a-z_]+)\.([0-9a-z_]+)$/ )
 		{
 			# a straight mapping with an EPrints field
 			my( $ds_id, $ep_fieldname ) = ( $1, $2 );

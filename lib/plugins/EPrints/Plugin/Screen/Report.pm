@@ -83,6 +83,7 @@ sub export
 	$plugin->output_list(
 		list => $self->items,
 		fh => \*STDOUT,
+		exportfields => $self->{processor}->{exportfields},
 	);
 }
 
@@ -96,7 +97,6 @@ sub properties_from
 	{
 		$self->{processor}->{dataset} = $self->repository->dataset( $dsid );
 	}
-
 
 	# sf2 - TODO - bark if dataset is not set? perhaps there are other ways to get the objects from...
 
@@ -112,6 +112,17 @@ sub properties_from
 			$self->{processor}->{plugin} = $plugin;
 		}
 	}
+
+
+	my @exportfields;
+	foreach my $fieldnames ( values %{$self->{exportfields}} )
+	{
+		foreach	my $fieldname ( @{$fieldnames} )
+		{
+			push @exportfields, $self->{processor}->{dataset}->field( $self->repository->param( $fieldname ) ) if defined $self->repository->param( $fieldname ); 
+		}
+	}
+	$self->{processor}->{exportfields} = \@exportfields;
 }
 
 # \@({meta_fields=>[ "field1", "field2" "document.field3" ], merge=>"ANY", match=>"EX", value=>"bees"}, {meta_fields=>[ "field4" ], value=>"honey"});
@@ -426,20 +437,84 @@ sub render_export_bar
 	
 	return $chunk unless( scalar( @plugins ) );
 
-	my $form = $chunk->appendChild( $self->render_form );
+	my $form = $self->render_form;
 	$form->setAttribute( method => "get" );
 	my $select = $form->appendChild( $repo->render_option_list(
 		name => 'export',
 		values => [map { $_->get_subtype } @plugins],
 		labels => {map { $_->get_subtype => $_->get_name } @plugins},
 	) );
+
+	if( defined( $self->{exportfields} ) )
+	{
+		#create labels and panels for tabbed interfaced
+		my @labels;
+		my @panels;
+		my $xml = $repo->xml;
+		my $xhtml = $repo->xhtml;
+
+		#allow user to choose which fields they want to export
+		foreach my $key ( keys %{$self->{exportfields}} )
+		{
+			#create a new tab
+			
+			#label
+			push @labels, $repo->html_phrase( "exportfields:$key" );
+
+			
+			#panel
+			my $div = $repo->make_element( "div" );
+	
+			#create a new list			
+			my $ul = $repo->make_element( "ul",
+	                	style => "list-style-type: none"
+	        	);
+				
+			foreach my $fieldname( @{$self->{exportfields}->{$key}} )
+			{
+			       my $field = $repo->dataset( "eprint" )->field( $fieldname );
+
+                		my $li = $repo->make_element( "li" );
+	                	$ul->appendChild( $li );
+
+	        	        my $checkbox = $repo->make_element( "input", type => "checkbox", id => $fieldname, name => $fieldname, value => $fieldname, checked => "yes" );
+
+		                my $label = $repo->make_element( "label", for => $fieldname );
+        		        $label->appendChild( $field->render_name );
+
+	                	$li->appendChild( $label );
+	        	        $li->appendChild( $checkbox );
+			}
+			$div->appendChild( $ul );
+
+			push @panels, $div;
+       		}
+		$form->appendChild( $repo->xhtml->tabs( \@labels, \@panels ) );
+	}
+
+
 	$form->appendChild( 
 		$repo->render_button(
 			name => "_action_export",
 			class => "ep_form_action_button",
 			value => $repo->phrase( 'cgi/users/edit_eprint:export' )
 	) );
-	
+
+#create a collapsible box
+	my $imagesurl = $repo->current_url( path => "static", "style/images" );
+	my %options;
+	$options{session} = $repo;
+        $options{id} = "ep_report_export";
+        $options{title} = $repo->html_phrase( "export_title" );
+        $options{collapsed} = 1;
+	$options{content} = $form;
+        $options{show_icon_url} = "$imagesurl/multi_down.png";
+	$options{hide_icon_url} = "$imagesurl/multi_up.png";
+
+	my $box = $repo->make_element( "div", style=>"text-align: left" );
+	$box->appendChild( EPrints::Box::render( %options ) );
+	$chunk->appendChild( $box );
+
 	return $chunk;
 }
 

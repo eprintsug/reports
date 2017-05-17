@@ -12,4 +12,6 @@
 <epp:phrase id="Plugin/Screen/Report/Example/Articles:title">Articles</epp:phrase>
 <epp:phrase id="Plugin/Screen/Report/Example/ConferenceItems:title">Conference Items</epp:phrase>
 
+<epp:phrase id="export_title">Export Options</epp:phrase>
+
 </epp:phrases>

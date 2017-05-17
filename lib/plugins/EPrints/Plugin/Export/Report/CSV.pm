@@ -18,22 +18,38 @@ sub new
 	return $self;
 }
 
-# Main method - called by the appropriate Screen::Report plugin
+use Data::Dumper;
+
 sub output_list
 {
-        my( $plugin, %opts ) = @_;
-       
-	# the appropriate Report::{report_id} plugin will build up the list: 
+        my( $plugin, %opts ) = @_;     
 
-	# CSV header / field list
-	print join( ",", map { $plugin->escape_value( $_ ) } @{ $plugin->report_fields_order || [] } ) . "\n";
+	my $repo = $plugin->repository;
+	
+	if( defined $opts{exportfields} ) #fields have been defined by the report's screen
+	{
+		$plugin->{export_fields} = [ map { $_->name } @{$opts{exportfields}} ];
+		print join( ",", map { $plugin->escape_value( EPrints::Utils::tree_to_utf8( $_->render_name ) ) } @{$opts{exportfields}} ) . "\n";
 
-	$opts{list}->map( sub {
-		my( undef, undef, $dataobj ) = @_;
-		my $output = $plugin->output_dataobj( $dataobj, $plugin->get_related_objects( $dataobj ) );
-		return unless( defined $output );
-		print "$output\n";
-	} );
+		$opts{list}->map( sub {
+                	my( undef, undef, $dataobj ) = @_;
+	                my $output = $plugin->output_dataobj( $dataobj );
+        	        return unless( defined $output );
+                	print "$output\n";
+	        } );
+	}
+	else #conventional use of the reporting plugin
+	{
+		# CSV header / field list
+		print join( ",", map { $plugin->escape_value( $_ ) } @{ $plugin->report_fields_order || [] } ) . "\n";
+
+		$opts{list}->map( sub {
+			my( undef, undef, $dataobj ) = @_;
+			my $output = $plugin->output_dataobj( $dataobj, $plugin->get_related_objects( $dataobj ) );
+			return unless( defined $output );
+			print "$output\n";
+		} );
+	}
 }
 
 # Exports a single object / row
@@ -44,70 +60,86 @@ sub output_dataobj
 
 	my $repo = $plugin->repository;
 
-	my $report_fields = $plugin->report_fields();
-
-	# related objects and their datasets
-	my $valid_ds = {};
-	foreach my $dsid ( keys %$objects )
-	{
-		$valid_ds->{$dsid} = $repo->dataset( $dsid );
-	}
-
-	# don't print out empty row so check that something's been done:
-	my $done_any = 0;
-
 	my @row;
-	foreach my $field ( @{ $plugin->report_fields_order() } )
-	{
-		my $ep_field = $report_fields->{$field};
 
-		if( ref( $ep_field ) eq 'CODE' )
+	if( defined $plugin->{export_fields} ) #the screen has defined export fields
+	{
+		for( @{ $plugin->{export_fields} } )
+	        {
+                	if( exists $plugin->{actions}->{$_} )
+	                {
+        	                push @row, $plugin->{actions}->{$_}->( $plugin, $dataobj );
+                	}
+	                else
+        	        {
+				push @row, $plugin->escape_value( EPrints::Utils::tree_to_utf8( $dataobj->render_value( $_ ) ) );
+	                }
+        	}
+
+	}
+	else	#use the conventional generic reporting framework approach
+	{
+		my $report_fields = $plugin->report_fields();
+
+		# related objects and their datasets
+		my $valid_ds = {};
+		foreach my $dsid ( keys %$objects )
 		{
-			# a sub{} we need to run
-			eval {
-				my $value = &$ep_field( $plugin, $objects );
-				if( EPrints::Utils::is_set( $value ) )
-				{
-					push @row, $plugin->escape_value( $value );
-					$done_any++ 
-				}
-				else
-				{
-					push @row, "";
-				}
-			};
-			if( $@ )
+			$valid_ds->{$dsid} = $repo->dataset( $dsid );
+		}
+
+		# don't print out empty row so check that something's been done:
+		my $done_any = 0;
+
+		foreach my $field ( @{ $plugin->report_fields_order() } )
+		{
+			my $ep_field = $report_fields->{$field};
+
+			if( ref( $ep_field ) eq 'CODE' )
 			{
-				$repo->log( "Report::CSV Runtime error: $@" );
+				# a sub{} we need to run
+				eval {
+					my $value = &$ep_field( $plugin, $objects );
+					if( EPrints::Utils::is_set( $value ) )
+					{
+						push @row, $plugin->escape_value( $value );
+						$done_any++ 
+					}
+					else
+					{
+						push @row, "";
+					}
+				};
+				if( $@ )
+				{
+					$repo->log( "Report::CSV Runtime error: $@" );
+				}
+				next;
+			}
+			elsif( $ep_field !~ /^([a-z_]+)\.([a-z_]+)$/ )
+			{
+				# wrong format :-/
+				push @row, "";
+				next;
+			}
+			# a straight mapping with an EPrints field
+			my( $ds_id, $ep_fieldname ) = ( $1, $2 );
+			my $ds = $valid_ds->{$ds_id};
+
+			unless( defined $ds && $ds->has_field( $ep_fieldname ) )
+			{
+				# dataset or field doesn't exist
+				push @row, "";
+				next;
 			}
 
-			next;
+			my $value = $objects->{$ds_id}->value( $ep_fieldname );
+			$done_any++ if( EPrints::Utils::is_set( $value ) );
+			push @row, $plugin->escape_value( $value );
 		}
-		elsif( $ep_field !~ /^([a-z_]+)\.([a-z_]+)$/ )
-		{
-			# wrong format :-/
-			push @row, "";
-			next;
-		}
-
-		# a straight mapping with an EPrints field
-		my( $ds_id, $ep_fieldname ) = ( $1, $2 );
-		my $ds = $valid_ds->{$ds_id};
-
-		unless( defined $ds && $ds->has_field( $ep_fieldname ) )
-		{
-			# dataset or field doesn't exist
-			push @row, "";
-			next;
-		}
-
-		my $value = $objects->{$ds_id}->value( $ep_fieldname );
-		$done_any++ if( EPrints::Utils::is_set( $value ) );
-		push @row, $plugin->escape_value( $value );
+		return undef unless( $done_any );
 	}
-
-	return undef unless( $done_any );
-
+	
 	return join( ",", @row );
 }
 

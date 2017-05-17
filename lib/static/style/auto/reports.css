@@ -63,3 +63,13 @@ div.ep_report_compliance_text {
 	font-weight: bold;
 	font-size: 20px;
 }
+
+div#ep_report_export_content_inner form > input, div#ep_report_export_content_inner form > select{
+	margin: 5px 0px;
+}
+
+div#ep_report_export_content_inner .ep_tab_panel input
+{
+	margin-left: 5px;
+	vertical-align: middle;
+}

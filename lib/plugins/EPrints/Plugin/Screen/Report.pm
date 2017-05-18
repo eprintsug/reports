@@ -4,6 +4,7 @@ package EPrints::Plugin::Screen::Report;
 
 use JSON qw();
 use EPrints::Plugin::Screen;
+use Data::Dumper;
 @ISA = ( 'EPrints::Plugin::Screen' );
 
 use strict;
@@ -14,7 +15,7 @@ sub new
 
 	my $self = $class->SUPER::new(%params);
 
-	push @{$self->{actions}}, qw( export );
+	push @{$self->{actions}}, qw( export search );
 
         $self->{appears} = [
                 {
@@ -87,6 +88,64 @@ sub export
 	);
 }
 
+sub allow_search { return 1; }
+
+sub action_search
+{
+	my( $self ) = @_;
+
+	$self->{processor}->{action} = "search";
+
+	#read parameters
+	my $session = $self->{session};
+
+	$self->{processor}->{report} = $session->param( 'report' );
+
+	my $ds = $self->{session}->dataset( "archive" );
+	my $sconf = $ds->search_config( "report" );
+
+	$self->{processor}->{search} = EPrints::Search->new(
+               	keep_cache => 1,
+                session => $self->{session},
+       	        dataset => $ds,
+               	%{$sconf} );
+
+	my $loaded = 0;
+        my $id = $session->param( "cache" );
+        if( defined $id )
+        {
+		$loaded = $self->{processor}->{search}->from_cache( $id );
+        }
+
+        if( !$loaded )
+        {
+                my $exp = $session->param( "exp" );
+                if( defined $exp )
+                {
+			$self->{processor}->{search}->from_string( $exp );
+                        # cache expired...
+                        $loaded = 1;
+                }
+        }
+
+        my @problems;
+        if( !$loaded )
+        {
+        	foreach my $sf ( $self->{processor}->{search}->get_non_filter_searchfields )
+                {
+			my $prob = $sf->from_form();
+                        if( defined $prob )
+                        {
+				$self->{processor}->add_message( "warning", $prob );
+                        }
+                }
+        }                              
+
+
+	#display the results
+	$self->render;
+}
+
 sub properties_from
 {
 	my( $self ) = @_;
@@ -113,7 +172,7 @@ sub properties_from
 		}
 	}
 
-
+	#list of export fields retrieved from non-abstract instances of reports
 	my @exportfields;
 	foreach my $fieldnames ( values %{$self->{exportfields}} )
 	{
@@ -139,15 +198,17 @@ sub items
 {
 	my( $self ) = @_;
 
-	if( defined $self->{processor}->{dataset} )
+	if( $self->{processor}->{action} eq "search" )
+       	{
+		return $self->{processor}->{search}->{dataset}->search( $self->{processor}->{search} );
+	}
+	elsif( defined $self->{processor}->{dataset} ) 
 	{
 		my %search_opts = ( filters => $self->filters, satisfy_all => 1 );
 		if( defined $self->param( 'custom_order' ) )
 		{
 			$search_opts{custom_order} = $self->param( 'custom_order' );
-		}
-
-
+		}	
 		return $self->{processor}->{dataset}->search( %search_opts );
 	}
 
@@ -311,12 +372,20 @@ sub render_splash_page
 {
 	my( $self ) = @_;
 
+	my $repo = $self->repository;
 	my @plugins = $self->report_plugins;
 
 	if( !scalar( @plugins ) )
 	{
 		return $self->html_phrase( "no_reports" );
 	}
+
+	my @labels;
+	my @panels;
+
+	#preset reports
+	push @labels, $repo->html_phrase( "reports_preset" );
+	my $preset = $repo->make_element( "div" );
 
 	# top category: by classname > Report::ROS::SomeReport1, Report::ROS::SomeReport2
 
@@ -360,8 +429,88 @@ sub render_splash_page
 		}
 	}
 
-	return $ul;
+	$preset->appendChild( $ul );
+	push @panels, $preset;
 
+	#custom reports
+	push @labels, $repo->html_phrase( "reports_custom" );
+
+	my $custom = $repo->make_element( "div" );
+	my $form = $repo->render_form( "get" );
+
+	#select a report
+	my $report_select = $repo->make_element( "select", name=>"report" );
+	foreach my $report_plugin ( @plugins )
+	{
+		if( $report_plugin->{custom} )
+		{	
+			my $id = $report_plugin->{report};
+			my $option = $repo->make_element( "option", value => $report_plugin->get_subtype );
+			$option->appendChild( $report_plugin->render_title );
+			$report_select->appendChild( $option );
+		}	
+	}
+	$form->appendChild( $report_select );
+
+	#perform search on predefined fields
+	my $table = $repo->make_element( "table", class=>"ep_search_fields" );
+        $form->appendChild( $table );
+	$form->appendChild( $repo->render_hidden_field( "screen", $self->{screenid} ) );
+        $table->appendChild( $self->render_search_fields );
+	$form->appendChild( $self->render_controls );
+	$custom->appendChild( $form );
+
+	push @panels, $custom;
+
+	#create and return the tabs
+	return $repo->xhtml->tabs(\@labels, \@panels );
+}
+
+sub render_search_fields
+{
+        my( $self ) = @_;
+
+        my $frag = $self->{session}->make_doc_fragment;
+
+	my $ds = $self->{session}->dataset( "archive" );
+	my $sconf = $ds->search_config( "report" );
+
+	my $search = EPrints::Search->new(
+                keep_cache => 1,
+                session => $self->{session},
+                dataset => $ds,
+                %{$sconf} );
+
+        foreach my $sf ( $search->get_non_filter_searchfields )
+        {
+	         $frag->appendChild(
+                        $self->{session}->render_row_with_help(
+                                help_prefix => $sf->get_form_prefix."_help",
+                                help => $sf->render_help,
+                                label => $sf->render_name,
+                                field => $sf->render,
+                                no_toggle => ( $sf->{show_help} eq "always" ),
+                                no_help => ( $sf->{show_help} eq "never" ),
+        	) );
+        }
+
+        return $frag;
+}
+
+sub render_controls
+{
+	my( $self ) = @_;
+
+	my $div = $self->{session}->make_element(
+                "div" ,
+                class => "ep_search_buttons" );
+        $div->appendChild( $self->{session}->render_action_buttons(
+                _order => [ "search", "newsearch" ],
+                newsearch => $self->{session}->phrase( "lib/searchexpression:action_reset" ),
+                search => $self->{session}->phrase( "lib/searchexpression:action_search" ) )
+        );
+
+	return $div;
 }
 
 sub render
@@ -370,8 +519,8 @@ sub render
 
 	# if users access Screen::Report directly we want to display some sort of menu
 	# where users can select viewable reports
-	if( "EPrints::Plugin::".$self->get_id eq __PACKAGE__ )
-	{
+	if( "EPrints::Plugin::".$self->get_id eq __PACKAGE__ && $self->{processor}->{action} ne "search" )
+	{	
 		return $self->render_splash_page;
 	}
 
@@ -382,7 +531,6 @@ sub render
 	$chunk->appendChild( $self->render_export_bar );
 
 	my $items = $self->items;
-
 	if( !defined $items || $items->count == 0 )
 	{
 		# No items message
@@ -398,11 +546,21 @@ sub render
                 $self->hidden_bits,
         );
         $parameters = $parameters->query;
-
+		
 	my $prefix = $self->param( 'datasetid' );
 
 	# the main <div>
 	my $container_id = sprintf( "ep_report_%s\_container", $self->get_report );
+
+	#update javascript parameters if coming from a search request
+	if( $self->{processor}->{action} eq "search" )
+	{
+		my $plugin = $self->{processor}->{report};
+		$plugin =~ s/:/%3A/g;
+		$parameters = "screen=$plugin";
+		$prefix = 'eprint';
+		$container_id = sprintf( "ep_report_%s\_container", "ref_cc-ex-2015" );
+	}
 
 	$chunk->appendChild( $repo->make_javascript( <<"EOJ" ) );
 document.observe("dom:loaded", function() {
@@ -500,7 +658,7 @@ sub render_export_bar
 			value => $repo->phrase( 'cgi/users/edit_eprint:export' )
 	) );
 
-#create a collapsible box
+	#create a collapsible box
 	my $imagesurl = $repo->current_url( path => "static", "style/images" );
 	my %options;
 	$options{session} = $repo;

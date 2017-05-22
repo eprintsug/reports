@@ -435,30 +435,58 @@ sub render_splash_page
 	#custom reports
 	push @labels, $repo->html_phrase( "reports_custom" );
 
-	my $custom = $repo->make_element( "div" );
+	my $custom = $repo->make_element( "div", id=>"custom_report" );
 	my $form = $repo->render_form( "get" );
 
-	#select a report
-	my $report_select = $repo->make_element( "select", name=>"report" );
+	#add each report to the select component and generate search form if required
+	my $report_select = $repo->make_element( "select", name=>"report", id=>"select_report" );
+	my %search_forms;
 	foreach my $report_plugin ( @plugins )
 	{
-		if( $report_plugin->{custom} )
+		if( $report_plugin->param( "custom" ) )
 		{	
+			my $formid = $report_plugin->{datasetid} . "_report";
+
+			#add to select component
 			my $id = $report_plugin->{report};
-			my $option = $repo->make_element( "option", value => $report_plugin->get_subtype );
+			my $option = $repo->make_element( "option", value => $report_plugin->get_subtype, form => $formid );
 			$option->appendChild( $report_plugin->render_title );
 			$report_select->appendChild( $option );
+
+			#create search form
+			
+			#get report dataset and appropriate search config
+			my $report_ds = $repo->dataset( $report_plugin->{datasetid} );
+			my $sconf = $report_ds->search_config( "report" );
+		
+			my $search = EPrints::Search->new(
+		                keep_cache => 1,
+	                	session => $repo,
+		                dataset => $report_ds,
+		                %{$sconf}
+			);
+
+			#generate the form
+			my $frag = $self->render_search_fields( $search );
+			$search_forms{$formid} = $frag unless exists $search_forms{$formid};
 		}	
 	}
 	$form->appendChild( $report_select );
-
-	#perform search on predefined fields
-	my $table = $repo->make_element( "table", class=>"ep_search_fields" );
-        $form->appendChild( $table );
 	$form->appendChild( $repo->render_hidden_field( "screen", $self->{screenid} ) );
-        $table->appendChild( $self->render_search_fields );
+
+	#render possible search forms
+	foreach my $formid (keys %search_forms)
+	{
+		my $table = $repo->make_element( "table", class=>"ep_search_fields", id=>$formid, style=>"display: none" );
+	        $form->appendChild( $table );
+	        $table->appendChild( $search_forms{$formid} );
+	}
+
 	$form->appendChild( $self->render_controls );
 	$custom->appendChild( $form );
+
+	#javascript for changing forms based on report selection
+	$custom->appendChild( $repo->make_javascript( 'initReportForm();' ) );
 
 	push @panels, $custom;
 
@@ -468,18 +496,9 @@ sub render_splash_page
 
 sub render_search_fields
 {
-        my( $self ) = @_;
+        my( $self, $search ) = @_;
 
         my $frag = $self->{session}->make_doc_fragment;
-
-	my $ds = $self->{session}->dataset( "archive" );
-	my $sconf = $ds->search_config( "report" );
-
-	my $search = EPrints::Search->new(
-                keep_cache => 1,
-                session => $self->{session},
-                dataset => $ds,
-                %{$sconf} );
 
         foreach my $sf ( $search->get_non_filter_searchfields )
         {

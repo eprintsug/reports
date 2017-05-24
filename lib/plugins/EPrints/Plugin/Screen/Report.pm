@@ -4,7 +4,6 @@ package EPrints::Plugin::Screen::Report;
 
 use JSON qw();
 use EPrints::Plugin::Screen;
-use Data::Dumper;
 @ISA = ( 'EPrints::Plugin::Screen' );
 
 use strict;
@@ -101,14 +100,24 @@ sub action_search
 
 	$self->{processor}->{report} = $session->param( 'report' );
 
-	my $ds = $self->{session}->dataset( "archive" );
-	my $sconf = $ds->search_config( "report" );
+	$self->{processor}->{screenid} = $self->{processor}->{report};
+	my $report_plugin = $self->{processor}->screen;
+	$self->{processor}->{report_plugin} = $report_plugin;
+	my $report_ds = $session->dataset( $report_plugin->{datasetid} );
+	$self->{processor}->{datasetid} = $report_ds->base_id;	
 
-	$self->{processor}->{search} = EPrints::Search->new(
-               	keep_cache => 1,
-                session => $self->{session},
-       	        dataset => $ds,
-               	%{$sconf} );
+	my $sconf = $report_ds->search_config( "report" );
+	my $format = "report/" . $report_ds->base_id;
+	$self->{processor}->{search} = $session->plugin( "Search" )->plugins(
+		{
+               		keep_cache => 1,
+	                session => $self->{session},
+       		        dataset => $report_ds,
+               		%{$sconf}
+		},
+		type => "Search",
+		can_search => $format,
+	);
 
 	my $loaded = 0;
         my $id = $session->param( "cache" );
@@ -131,16 +140,11 @@ sub action_search
         my @problems;
         if( !$loaded )
         {
-        	foreach my $sf ( $self->{processor}->{search}->get_non_filter_searchfields )
-                {
-			my $prob = $sf->from_form();
-                        if( defined $prob )
+		for( $self->{processor}->{search}->from_form )
                         {
-				$self->{processor}->add_message( "warning", $prob );
+                                $self->{processor}->add_message( "warning", $_ );
                         }
-                }
-        }                              
-
+        }                
 
 	#display the results
 	$self->render;
@@ -197,10 +201,10 @@ sub filters
 sub items
 {
 	my( $self ) = @_;
-
 	if( $self->{processor}->{action} eq "search" )
        	{
-		return $self->{processor}->{search}->{dataset}->search( $self->{processor}->{search} );
+		my $things = $self->{processor}->{search}->perform_search;
+		return $self->{processor}->{search}->perform_search;
 	}
 	elsif( defined $self->{processor}->{dataset} ) 
 	{
@@ -566,7 +570,8 @@ sub render
         );
         $parameters = $parameters->query;
 		
-	my $prefix = $self->param( 'datasetid' );
+	my $ds = $repo->dataset( $self->param( 'datasetid' ) ) if defined $self->param( 'datasetid' );
+	my $prefix = $ds->base_id if defined $ds;
 
 	# the main <div>
 	my $container_id = sprintf( "ep_report_%s\_container", $self->get_report );
@@ -577,8 +582,8 @@ sub render
 		my $plugin = $self->{processor}->{report};
 		$plugin =~ s/:/%3A/g;
 		$parameters = "screen=$plugin";
-		$prefix = 'eprint';
-		$container_id = sprintf( "ep_report_%s\_container", "ref_cc-ex-2015" );
+		$prefix = $self->{processor}->{datasetid};
+		$container_id = sprintf( "ep_report_%s\_container", $self->{processor}->{report_plugin}->{report} );
 	}
 
 	$chunk->appendChild( $repo->make_javascript( <<"EOJ" ) );
@@ -595,7 +600,6 @@ document.observe("dom:loaded", function() {
 
 });
 EOJ
-
 	$chunk->appendChild( $repo->make_element( 'div', class => 'ep_report_page', id => $container_id ) );
 
 	return $chunk;

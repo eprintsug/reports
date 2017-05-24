@@ -20,7 +20,7 @@ $c->{search}->{report} =
 	show_zero_results => 1,
 };
 
-$c->{search}->{user}->{report} =
+$c->{datasets}->{user}->{search}->{report} =
 {
         search_fields => [
                 { meta_fields => [ "name", ] },

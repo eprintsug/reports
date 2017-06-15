@@ -445,10 +445,12 @@ sub render_splash_page
 	#add each report to the select component and generate search form if required
 	my $report_select = $repo->make_element( "select", name=>"report", id=>"select_report" );
 	my %search_forms;
+	my $custom_reports = 0;
 	foreach my $report_plugin ( @plugins )
 	{
 		if( $report_plugin->param( "custom" ) )
 		{	
+			$custom_reports++;
 			my $formid = $report_plugin->{datasetid} . "_report";
 
 			#add to select component
@@ -492,10 +494,23 @@ sub render_splash_page
 	#javascript for changing forms based on report selection
 	$custom->appendChild( $repo->make_javascript( 'initReportForm();' ) );
 
-	push @panels, $custom;
+	if( $custom_reports ) #set up tab interface
+	{
+		my @labels;
+	        my @panels;
 
-	#create and return the tabs
-	return $repo->xhtml->tabs(\@labels, \@panels );
+		push @labels, $repo->html_phrase( "reports_preset" );
+		push @labels, $repo->html_phrase( "reports_custom" );
+
+		push @panels, $preset;
+		push @panels, $custom;
+
+		return $repo->xhtml->tabs(\@labels, \@panels );
+	}
+	else
+	{	
+		return $preset;
+	}
 }
 
 sub render_search_fields
@@ -629,23 +644,18 @@ sub render_export_bar
 	if( defined( $self->{exportfields} ) )
 	{
 		#create labels and panels for tabbed interfaced
-		my @labels;
-		my @panels;
 		my $xml = $repo->xml;
 		my $xhtml = $repo->xhtml;
 
 		#allow user to choose which fields they want to export
+		my $export_options = $repo->make_element( "div" );
+
 		foreach my $key ( keys %{$self->{exportfields}} )
 		{
-			#create a new tab
-			
-			#label
-			push @labels, $repo->html_phrase( "exportfields:$key" );
+			my $div = $repo->make_element( "div", class=>"report_export_options" );
+			$div->appendChild( my $h = $repo->make_element( "h4" ) );
+			$h->appendChild( $repo->html_phrase( "exportfields:$key" ) );	
 
-			
-			#panel
-			my $div = $repo->make_element( "div" );
-	
 			#create a new list			
 			my $ul = $repo->make_element( "ul",
 	                	style => "list-style-type: none"
@@ -663,14 +673,13 @@ sub render_export_bar
 		                my $label = $repo->make_element( "label", for => $fieldname );
         		        $label->appendChild( $field->render_name );
 
-	                	$li->appendChild( $label );
-	        	        $li->appendChild( $checkbox );
+	                	$li->appendChild( $checkbox );
+	        	        $li->appendChild( $label );
 			}
 			$div->appendChild( $ul );
-
-			push @panels, $div;
+			$export_options->appendChild( $div );
        		}
-		$form->appendChild( $repo->xhtml->tabs( \@labels, \@panels ) );
+		$form->appendChild( $export_options );
 	}
 
 

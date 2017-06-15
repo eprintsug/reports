@@ -73,3 +73,22 @@ div#ep_report_export_content_inner .ep_tab_panel input
 	margin-left: 5px;
 	vertical-align: middle;
 }
+
+div#ep_report_export_content_inner .report_export_options
+{
+	display: inline-block;
+	vertical-align: top;
+	min-width: 150px;
+}
+
+div#ep_report_export_content_inner .report_export_options h4
+{
+	display: inline-block;
+	vertical-align: top;
+	margin-bottom: 0;
+}
+
+div#ep_report_export_content_inner .report_export_options ul
+{
+	padding: 0 10px 0 0;
+}

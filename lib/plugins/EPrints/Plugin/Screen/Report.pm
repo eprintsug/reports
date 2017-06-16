@@ -170,7 +170,7 @@ sub properties_from
 	if( $format && $report )
 	{
 		my $plugin = $self->repository->plugin( "Export::$format", report => $report );
-		if( defined $plugin && $plugin->can_accept( "report/$report" ) )
+		if( defined $plugin && ( $plugin->can_accept( "report/$report" ) || ($plugin->can_accept( "report/generic" ) ) ) )
 		{
 			$self->{processor}->{plugin} = $plugin;
 		}
@@ -631,18 +631,32 @@ sub render_export_bar
 
 	my @plugins = $self->export_plugins;
 	
-	return $chunk unless( scalar( @plugins ) );
+	return $chunk unless( scalar( @plugins ) || defined( $self->{exportfields} ) );
 
+	my $report_ds = $repo->dataset( $self->{datasetid} );
 	my $form = $self->render_form;
 	$form->setAttribute( method => "get" );
-	my $select = $form->appendChild( $repo->render_option_list(
-		name => 'export',
-		values => [map { $_->get_subtype } @plugins],
-		labels => {map { $_->get_subtype => $_->get_name } @plugins},
-	) );
 
-	if( defined( $self->{exportfields} ) )
+	if( !defined( $self->{exportfields} ) )
 	{
+		#no custom export fields defined, use export plugins designed for this report
+		my $select = $form->appendChild( $repo->render_option_list(
+			name => 'export',
+			values => [map { $_->get_subtype } @plugins],
+			labels => {map { $_->get_subtype => $_->get_name } @plugins},
+		) );
+	}
+	else
+	{
+		#provide list of default export plugins for reports
+		@plugins = $self->export_plugins( "generic" );
+		my $select = $form->appendChild( $repo->render_option_list(
+			name => 'export',
+			values => [map { $_->get_subtype } @plugins],
+			labels => {map { $_->get_subtype => $_->get_name } @plugins},
+		) );
+
+
 		#create labels and panels for tabbed interfaced
 		my $xml = $repo->xml;
 		my $xhtml = $repo->xhtml;
@@ -652,36 +666,42 @@ sub render_export_bar
 
 		foreach my $key ( keys %{$self->{exportfields}} )
 		{
-			my $div = $repo->make_element( "div", class=>"report_export_options" );
-			$div->appendChild( my $h = $repo->make_element( "h4" ) );
-			$h->appendChild( $repo->html_phrase( "exportfields:$key" ) );	
-
 			#create a new list			
 			my $ul = $repo->make_element( "ul",
 	                	style => "list-style-type: none"
 	        	);
-				
+			
+			my $count = 0; #count how many fields we add
 			foreach my $fieldname( @{$self->{exportfields}->{$key}} )
 			{
-			       my $field = $repo->dataset( "eprint" )->field( $fieldname );
+				if( $report_ds->has_field( $fieldname ) )
+				{
+					$count++;
+					my $field = $report_ds->field( $fieldname );
 
-                		my $li = $repo->make_element( "li" );
-	                	$ul->appendChild( $li );
+	 				my $li = $repo->make_element( "li" );
+		                	$ul->appendChild( $li );
 
-	        	        my $checkbox = $repo->make_element( "input", type => "checkbox", id => $fieldname, name => $fieldname, value => $fieldname, checked => "yes" );
+	        		        my $checkbox = $repo->make_element( "input", type => "checkbox", id => $fieldname, name => $fieldname, value => $fieldname, checked => "yes" );
+	
+			                my $label = $repo->make_element( "label", for => $fieldname );
+        			        $label->appendChild( $field->render_name );
 
-		                my $label = $repo->make_element( "label", for => $fieldname );
-        		        $label->appendChild( $field->render_name );
-
-	                	$li->appendChild( $checkbox );
-	        	        $li->appendChild( $label );
+	                		$li->appendChild( $checkbox );
+	        	        	$li->appendChild( $label );
+				}
 			}
-			$div->appendChild( $ul );
-			$export_options->appendChild( $div );
+			if( $count ) #only add options if we have any fields to show
+			{
+				my $div = $repo->make_element( "div", class=>"report_export_options" );
+				$div->appendChild( my $h = $repo->make_element( "h4" ) );
+				$h->appendChild( $repo->html_phrase( "exportfields:$key" ) );	
+				$div->appendChild( $ul );
+				$export_options->appendChild( $div );
+			}
        		}
 		$form->appendChild( $export_options );
 	}
-
 
 	$form->appendChild( 
 		$repo->render_button(
@@ -744,17 +764,31 @@ sub to_json
         return EPrints::Utils::js_string( $object );
 }
 
+use Data::Dumper;
+
 sub export_plugins
 {
-        my( $self ) = @_;
+        my( $self, $generic ) = @_;
 
-        my @plugin_ids = $self->repository->plugin_list(
-                type => "Export",
-                can_accept => "report/".$self->get_report,
-                is_visible => "staff",
-		is_advertised => 1,
-        );
-        
+	my @plugin_ids;
+	if( $generic )
+	{
+ 		@plugin_ids = $self->repository->plugin_list(
+                	type => "Export",
+	                can_accept => "report/generic",
+        	        is_visible => "staff",
+			is_advertised => 1,
+	        );
+	}
+	else
+	{
+        	@plugin_ids = $self->repository->plugin_list(
+                	type => "Export",
+	                can_accept => "report/".$self->get_report,
+        	        is_visible => "staff",
+			is_advertised => 1,
+	        );
+        }
 	my @plugins;
 	foreach my $id ( @plugin_ids )
         {

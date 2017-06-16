@@ -50,9 +50,9 @@
         <file>
           <filename>plugins/EPrints/Plugin/Export/Report/CSV.pm</filename>
           <mime_type>inode/symlink</mime_type>
-          <hash>578c3e1555c3ac2a64b5d603bf561243</hash>
+          <hash>70bbbd97ecad5d8e352d7f2167ba672a</hash>
           <hash_type>MD5</hash_type>
-          <filesize>4162</filesize>
+          <filesize>4208</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Export/Report/CSV/Example.pm</filename>
@@ -64,9 +64,9 @@
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
           <mime_type>inode/symlink</mime_type>
-          <hash>8a59553fc7252761208911efe5c97181</hash>
+          <hash>74dcde169331e4afd662007a5537cf1f</hash>
           <hash_type>MD5</hash_type>
-          <filesize>20611</filesize>
+          <filesize>21619</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/Example.pm</filename>
@@ -110,7 +110,7 @@
       <content>install</content>
     </document>
   </documents>
-  <version>1.1.1</version>
+  <version>1.1.2</version>
   <creators>
     <item>
       <name>

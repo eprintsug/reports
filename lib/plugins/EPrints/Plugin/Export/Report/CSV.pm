@@ -14,11 +14,11 @@ sub new
 	$self->{name} = "Generic CSV";
 	$self->{suffix} = ".csv";
 	$self->{mimetype} = "text/plain; charset=utf-8";
+	$self->{accept} = [ 'report/generic' ];
+	$self->{advertise} = 1;
 
 	return $self;
 }
-
-use Data::Dumper;
 
 sub output_list
 {
@@ -57,7 +57,6 @@ sub output_list
 sub output_dataobj
 {
 	my( $plugin, $dataobj, $objects ) = @_;
-
 	my $repo = $plugin->repository;
 
 	my @row;

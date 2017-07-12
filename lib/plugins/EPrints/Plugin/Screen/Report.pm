@@ -103,7 +103,7 @@ sub action_search
 	$self->{processor}->{screenid} = $self->{processor}->{report};
 	my $report_plugin = $self->{processor}->screen;
 	$self->{processor}->{report_plugin} = $report_plugin;
-	my $report_ds = $session->dataset( $report_plugin->{datasetid} );
+	my $report_ds = $session->dataset( $report_plugin->{searchdatasetid} );
 	$self->{processor}->{datasetid} = $report_ds->base_id;	
 
 	my $sconf = $report_ds->search_config( "report" );
@@ -451,7 +451,7 @@ sub render_splash_page
 		if( $report_plugin->param( "custom" ) )
 		{	
 			$custom_reports++;
-			my $formid = $report_plugin->{datasetid} . "_report";
+			my $formid = $report_plugin->{searchdatasetid} . "_report";
 
 			#add to select component
 			my $id = $report_plugin->{report};
@@ -462,7 +462,7 @@ sub render_splash_page
 			#create search form
 			
 			#get report dataset and appropriate search config
-			my $report_ds = $repo->dataset( $report_plugin->{datasetid} );
+			my $report_ds = $repo->dataset( $report_plugin->{searchdatasetid} );
 			my $sconf = $report_ds->search_config( "report" );
 		
 			my $search = EPrints::Search->new(

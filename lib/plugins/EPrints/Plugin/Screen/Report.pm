@@ -16,6 +16,8 @@ sub new
 
 	push @{$self->{actions}}, qw( export search );
 
+	$self->{sconf} = "report";
+
         $self->{appears} = [
                 {
                         place => "key_tools",
@@ -32,8 +34,10 @@ sub can_be_viewed
 {
         my( $self ) = @_;
 
-	return 0 if( !defined $self->{repository}->current_user );
+	return 1 if( $self->{public} ); #allow a report to be publicly available
 
+	return 0 if( !defined $self->{repository}->current_user );
+	
 	return $self->allow( 'report' );
 }
 
@@ -84,10 +88,40 @@ sub export
 		list => $self->items,
 		fh => \*STDOUT,
 		exportfields => $self->{processor}->{exportfields},
+		dataset => $self->{processor}->{dataset},
+		plugin => $self,
 	);
 }
 
 sub allow_search { return 1; }
+
+#generates search config
+sub _create_search
+{
+	my( $self ) = @_;
+
+	my $session = $self->{session};
+        my $report_plugin = $self->{processor}->screen;
+        $self->{processor}->{report_plugin} = $report_plugin;
+        my $report_ds = $session->dataset( $report_plugin->{searchdatasetid} );
+        if( defined $report_ds )
+        {
+                $self->{processor}->{datasetid} = $report_ds->base_id;
+
+                my $sconf = $report_ds->search_config( $report_plugin->{sconf} );
+                my $format = "report/" . $report_ds->base_id;
+                $self->{processor}->{search} = $session->plugin( "Search" )->plugins(
+                        {
+                                keep_cache => 1,
+                                session => $self->{session},
+                                dataset => $report_ds,
+                                %{$sconf}
+                        },
+                        type => "Search",
+                        can_search => $format,
+                );
+	}
+}
 
 sub action_search
 {
@@ -101,23 +135,7 @@ sub action_search
 	$self->{processor}->{report} = $session->param( 'report' );
 
 	$self->{processor}->{screenid} = $self->{processor}->{report};
-	my $report_plugin = $self->{processor}->screen;
-	$self->{processor}->{report_plugin} = $report_plugin;
-	my $report_ds = $session->dataset( $report_plugin->{searchdatasetid} );
-	$self->{processor}->{datasetid} = $report_ds->base_id;	
-
-	my $sconf = $report_ds->search_config( "report" );
-	my $format = "report/" . $report_ds->base_id;
-	$self->{processor}->{search} = $session->plugin( "Search" )->plugins(
-		{
-               		keep_cache => 1,
-	                session => $self->{session},
-       		        dataset => $report_ds,
-               		%{$sconf}
-		},
-		type => "Search",
-		can_search => $format,
-	);
+	$self->_create_search;
 
 	my $loaded = 0;
         my $id = $session->param( "cache" );
@@ -144,7 +162,8 @@ sub action_search
                         {
                                 $self->{processor}->add_message( "warning", $_ );
                         }
-        }                
+        }
+          
 
 	#display the results
 	$self->render;
@@ -154,6 +173,7 @@ sub properties_from
 {
 	my( $self ) = @_;
 
+	my $repo = $self->repository;
 	$self->SUPER::properties_from;
 
 	if( defined ( my $dsid = $self->param( "datasetid" ) ) )
@@ -165,6 +185,15 @@ sub properties_from
 
 
 	my $report = $self->get_report();
+
+	#get a search object if we have one from a previous search action, so that we might later use it to do an export action
+	$self->_create_search;	
+	if( defined $self->repository->param( "search" ) )
+	{
+		$self->{processor}->{search}->from_string( $self->repository->param( "search" ) ) if defined $self->{processor}->{search};
+		$self->{processor}->{export_search} = 1;
+	}
+	
 
 	my $format = $self->repository->param( "export" );
 	if( $format && $report )
@@ -178,16 +207,19 @@ sub properties_from
 
 	#list of export fields retrieved from non-abstract instances of reports
 	my @exportfields;
-	foreach my $fieldnames ( values %{$self->{exportfields}} )
+	if( defined $repo->config( $self->{export_conf}, "exportfields" ) )
 	{
-		foreach	my $fieldname ( @{$fieldnames} )
+		foreach my $fieldnames ( values %{$repo->config( $self->{export_conf}, "exportfields" )} )
 		{
-			push @exportfields, $self->{processor}->{dataset}->field( $self->repository->param( $fieldname ) ) if defined $self->repository->param( $fieldname ); 
+			foreach	my $fieldname ( @{$fieldnames} )
+			{
+				push @exportfields, $fieldname if defined $self->repository->param( $fieldname ); 
+			}
 		}
 	}
 	$self->{processor}->{exportfields} = \@exportfields;
 }
-
+		
 # \@({meta_fields=>[ "field1", "field2" "document.field3" ], merge=>"ANY", match=>"EX", value=>"bees"}, {meta_fields=>[ "field4" ], value=>"honey"});
 # e.g.
 # return [ { meta_fields => [ 'type' ], value => 'article' } ]
@@ -201,9 +233,11 @@ sub filters
 sub items
 {
 	my( $self ) = @_;
-	if( $self->{processor}->{action} eq "search" )
+	if( $self->{processor}->{action} eq "search" || $self->{processor}->{export_search} )
        	{
-		my $things = $self->{processor}->{search}->perform_search;
+		my $report = $self->{processor}->{report_plugin};	
+		$report->apply_filters if $report->can( 'apply_filters' );
+	
 		return $self->{processor}->{search}->perform_search;
 	}
 	elsif( defined $self->{processor}->{dataset} ) 
@@ -463,7 +497,7 @@ sub render_splash_page
 			
 			#get report dataset and appropriate search config
 			my $report_ds = $repo->dataset( $report_plugin->{searchdatasetid} );
-			my $sconf = $report_ds->search_config( "report" );
+			my $sconf = $report_ds->search_config( $report_plugin->{sconf} ) ;
 		
 			my $search = EPrints::Search->new(
 		                keep_cache => 1,
@@ -630,14 +664,18 @@ sub render_export_bar
 	my $chunk = $repo->make_doc_fragment;
 
 	my @plugins = $self->export_plugins;
-	
-	return $chunk unless( scalar( @plugins ) || defined( $self->{exportfields} ) );
+	return $chunk unless( scalar( @plugins ) || defined( $repo->config( $self->{export_conf}, "exportfields" ) ) );
 
 	my $report_ds = $repo->dataset( $self->{datasetid} );
 	my $form = $self->render_form;
 	$form->setAttribute( method => "get" );
 
-	if( !defined( $self->{exportfields} ) )
+	if( $self->{processor}->{action} eq "search" )
+        {
+		$form->appendChild( $repo->render_hidden_field( "search",  $self->{processor}->{search}->serialise) );
+	}
+
+	if( !defined( $repo->config( $self->{export_conf}, "exportfields" ) ) )
 	{
 		#no custom export fields defined, use export plugins designed for this report
 		my $select = $form->appendChild( $repo->render_option_list(
@@ -664,7 +702,7 @@ sub render_export_bar
 		#allow user to choose which fields they want to export
 		my $export_options = $repo->make_element( "div" );
 
-		foreach my $key ( keys %{$self->{exportfields}} )
+		foreach my $key ( keys %{$repo->config( $self->{export_conf}, "exportfields" )} )
 		{
 			#create a new list			
 			my $ul = $repo->make_element( "ul",
@@ -672,24 +710,27 @@ sub render_export_bar
 	        	);
 			
 			my $count = 0; #count how many fields we add
-			foreach my $fieldname( @{$self->{exportfields}->{$key}} )
+			foreach my $fieldname( @{$repo->config( $self->{export_conf}, "exportfields" )->{$key}} )
 			{
-				if( $report_ds->has_field( $fieldname ) )
-				{
+					my $field = EPrints::Utils::field_from_config_string( $report_ds, $fieldname );
+			
 					$count++;
-					my $field = $report_ds->field( $fieldname );
 
 	 				my $li = $repo->make_element( "li" );
 		                	$ul->appendChild( $li );
 
-	        		        my $checkbox = $repo->make_element( "input", type => "checkbox", id => $fieldname, name => $fieldname, value => $fieldname, checked => "yes" );
-	
+	        		        my $checkbox = $repo->make_element( "input", type => "checkbox", id => $fieldname, name => $fieldname, value => $fieldname );	
+					if( ( grep { $fieldname eq $_ } @{$repo->config( $self->{export_conf}, "exportfield_defaults" )} ) || ( scalar( @{$repo->config( $self->{export_conf}, "exportfield_defaults" )} ) == 0 ) )
+					{
+						#only check defaults or check everything if defaults not defined
+						$checkbox->setAttribute( "checked", "yes" );
+					}
+
 			                my $label = $repo->make_element( "label", for => $fieldname );
         			        $label->appendChild( $field->render_name );
 
 	                		$li->appendChild( $checkbox );
 	        	        	$li->appendChild( $label );
-				}
 			}
 			if( $count ) #only add options if we have any fields to show
 			{
@@ -763,8 +804,6 @@ sub to_json
 
         return EPrints::Utils::js_string( $object );
 }
-
-use Data::Dumper;
 
 sub export_plugins
 {

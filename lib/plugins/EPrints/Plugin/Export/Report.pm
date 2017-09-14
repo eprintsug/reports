@@ -40,6 +40,22 @@ sub initialise_fh
 # Which report are we currently exporting?
 sub get_report { shift->{report} }
 
+sub get_export_fields
+{
+	my( $plugin, %opts ) = @_;
+	
+	if( defined $opts{exportfields} ) #fields have been defined by the report's screen
+        {
+		$plugin->{custom_fields} = 1;
+                $plugin->{report} = $opts{plugin};
+                $plugin->{exportfields} = $opts{exportfields};
+	}
+	else	#use fields as defined by the plugin
+	{
+		$plugin->{exportfields} = $plugin->report_fields_order || [];
+	}
+}
+
 # TODO Note copy of Screen::Report::report_fields_order
 sub report_fields_order
 {

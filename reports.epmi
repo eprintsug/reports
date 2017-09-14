@@ -15,9 +15,9 @@
         <file>
           <filename>epm/reports/cfg/cfg.d/z_reports.pl</filename>
           <mime_type>text/plain</mime_type>
-          <hash>93f81409a99f2f77d561f105c06066f4</hash>
+          <hash>970b87ef9d15166a9841911ac583b88a</hash>
           <hash_type>MD5</hash_type>
-          <filesize>298</filesize>
+          <filesize>357</filesize>
         </file>
         <file>
           <filename>epm/reports/cfg/cfg.d/z_search_reports.pl</filename>
@@ -43,16 +43,16 @@
         <file>
           <filename>plugins/EPrints/Plugin/Export/Report.pm</filename>
           <mime_type>inode/symlink</mime_type>
-          <hash>535755b1bb018c12f8841b4d2512623e</hash>
+          <hash>4532f1d3111eede3fe6a4e8c66965895</hash>
           <hash_type>MD5</hash_type>
-          <filesize>2143</filesize>
+          <filesize>2556</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Export/Report/CSV.pm</filename>
           <mime_type>inode/symlink</mime_type>
-          <hash>70bbbd97ecad5d8e352d7f2167ba672a</hash>
+          <hash>718c048fb5544396aba731a277d68951</hash>
           <hash_type>MD5</hash_type>
-          <filesize>4208</filesize>
+          <filesize>5235</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Export/Report/CSV/Example.pm</filename>
@@ -62,11 +62,18 @@
           <filesize>409</filesize>
         </file>
         <file>
+          <filename>plugins/EPrints/Plugin/Export/Report/JSON.pm</filename>
+          <mime_type>text/plain</mime_type>
+          <hash>3ee98189aee3464f0992881814056a72</hash>
+          <hash_type>MD5</hash_type>
+          <filesize>6567</filesize>
+        </file>
+        <file>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
           <mime_type>inode/symlink</mime_type>
-          <hash>74dcde169331e4afd662007a5537cf1f</hash>
+          <hash>1d839fa2b8becbd027b6dd5c4293be1d</hash>
           <hash_type>MD5</hash_type>
-          <filesize>21619</filesize>
+          <filesize>23360</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/Example.pm</filename>
@@ -92,9 +99,9 @@
         <file>
           <filename>static/javascript/auto/reports.js</filename>
           <mime_type>inode/symlink</mime_type>
-          <hash>64e74c567e76a914fe77871dbdfebc62</hash>
+          <hash>bf6c593a1f07decb82dd8cc85712dd60</hash>
           <hash_type>MD5</hash_type>
-          <filesize>8273</filesize>
+          <filesize>9339</filesize>
         </file>
         <file>
           <filename>static/style/auto/reports.css</filename>
@@ -110,7 +117,7 @@
       <content>install</content>
     </document>
   </documents>
-  <version>1.1.2</version>
+  <version>2.0</version>
   <creators>
     <item>
       <name>

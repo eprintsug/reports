@@ -24,32 +24,21 @@ sub output_list
 {
         my( $plugin, %opts ) = @_;     
 
-	my $repo = $plugin->repository;
-	
-	if( defined $opts{exportfields} ) #fields have been defined by the report's screen
-	{
-		$plugin->{export_fields} = [ map { $_->name } @{$opts{exportfields}} ];
-		print join( ",", map { $plugin->escape_value( EPrints::Utils::tree_to_utf8( $_->render_name ) ) } @{$opts{exportfields}} ) . "\n";
+	$plugin->get_export_fields( %opts ); #get export fields based on user requirements or plugin defaults
 
-		$opts{list}->map( sub {
-                	my( undef, undef, $dataobj ) = @_;
-	                my $output = $plugin->output_dataobj( $dataobj );
-        	        return unless( defined $output );
-                	print "$output\n";
-	        } );
-	}
-	else #conventional use of the reporting plugin
-	{
-		# CSV header / field list
-		print join( ",", map { $plugin->escape_value( $_ ) } @{ $plugin->report_fields_order || [] } ) . "\n";
+	my $ds = $opts{dataset};
+	$plugin->{dataset} = $ds;	
 
-		$opts{list}->map( sub {
-			my( undef, undef, $dataobj ) = @_;
-			my $output = $plugin->output_dataobj( $dataobj, $plugin->get_related_objects( $dataobj ) );
-			return unless( defined $output );
-			print "$output\n";
-		} );
-	}
+	#print header row
+	print join( ",", map { my $field = EPrints::Utils::field_from_config_string( $ds, $_ ); $plugin->escape_value( EPrints::Utils::tree_to_utf8( $field->render_name ) ) } @{$opts{exportfields}} ) . "\n";
+
+	#print values
+	$opts{list}->map( sub {
+               	my( undef, undef, $dataobj ) = @_;
+                my $output = $plugin->output_dataobj( $dataobj, $plugin->get_related_objects( $dataobj ) );
+       	        return unless( defined $output );
+               	print "$output\n";
+        } );
 }
 
 # Exports a single object / row
@@ -61,31 +50,66 @@ sub output_dataobj
 
 	my @row;
 
-	if( defined $plugin->{export_fields} ) #the screen has defined export fields
+	if( defined $plugin->{custom_fields} ) #the screen has defined export fields
 	{
-		for( @{ $plugin->{export_fields} } )
+		for( @{ $plugin->{exportfields} } )
 	        {
-                	if( exists $plugin->{actions}->{$_} )
+                	if( exists $repo->config( $plugin->{report}->{export_conf}, "custom_export" )->{$_} )
 	                {
-        	                push @row, $plugin->{actions}->{$_}->( $plugin, $dataobj );
+				my $value = $repo->config( $plugin->{report}->{export_conf}, "custom_export" )->{$_}->( $dataobj, $plugin->{report} );
+                                if( EPrints::Utils::is_set( $value ) )
+                                {
+					push @row, $plugin->escape_value( $value );
+				}
                 	}
 	                else
         	        {
-				push @row, $plugin->escape_value( EPrints::Utils::tree_to_utf8( $dataobj->render_value( $_ ) ) );
+				my @fnames = split( /\./, $_ );
+				if( scalar( @fnames > 1 ) ) #a field of another dataset, e.g. documents.content
+				{
+					my $field = $plugin->{dataset}->get_field( $fnames[0] ); #first get the field
+					if( $field->is_type( "subobject", "itemref" ) ) #if thee field belongs to another dataset
+					{	
+						my @values;
+						my @dataobjs;
+						my $datasetid = $field->get_property( "datasetid" );
+						if( $datasetid eq "document" ) #documents represent a special case of sub object - we don't want volatile documents (probably)
+						{
+							@dataobjs = $dataobj->get_all_documents;
+						}
+						else
+						{
+							@dataobjs = @{$dataobj->value( $fnames[0] )};
+						}
+						foreach my $obj ( @dataobjs ) #get the values we are requesting of the dataobjects
+						{
+							push @values, $plugin->escape_value( EPrints::Utils::tree_to_utf8( $obj->render_value( $fnames[1] ) ) );
+						} 
+						push @row, join( ";", @values );
+					}	
+					else	
+					{
+						push @row, "Unrecognised field definition.";
+					}
+				}
+				else
+				{
+		       	      		push @row, $plugin->escape_value( EPrints::Utils::tree_to_utf8( $dataobj->render_value( $_ ) ) );
+				}
 	                }
         	}
 
 	}
 	else	#use the conventional generic reporting framework approach
-	{
-		my $report_fields = $plugin->report_fields();
-
+	{	
 		# related objects and their datasets
-		my $valid_ds = {};
-		foreach my $dsid ( keys %$objects )
-		{
+	        my $valid_ds = {};
+        	foreach my $dsid ( keys %$objects )
+	        {	
 			$valid_ds->{$dsid} = $repo->dataset( $dsid );
-		}
+        	}
+
+		my $report_fields = $plugin->report_fields();
 
 		# don't print out empty row so check that something's been done:
 		my $done_any = 0;
@@ -93,7 +117,6 @@ sub output_dataobj
 		foreach my $field ( @{ $plugin->report_fields_order() } )
 		{
 			my $ep_field = $report_fields->{$field};
-
 			if( ref( $ep_field ) eq 'CODE' )
 			{
 				# a sub{} we need to run

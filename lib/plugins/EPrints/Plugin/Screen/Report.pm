@@ -2,7 +2,7 @@ package EPrints::Plugin::Screen::Report;
 
 # Abstract class that handles the Report tools
 
-use JSON qw();
+use JSON;
 use EPrints::Plugin::Screen;
 @ISA = ( 'EPrints::Plugin::Screen' );
 
@@ -634,17 +634,27 @@ sub render
 		$prefix = $self->{processor}->{datasetid};
 		$container_id = sprintf( "ep_report_%s\_container", $self->{processor}->{report_plugin}->{report} );
 	}
+	
+	#show/hide compliance
+	my $show_compliance = 1;
+	$show_compliance = $self->{show_compliance} if defined $self->{show_compliance};
+
+	#custom labels
+	my $labels = 0;
+	$labels = encode_json $self->{labels} if defined $self->{labels};
 
 	$chunk->appendChild( $repo->make_javascript( <<"EOJ" ) );
 document.observe("dom:loaded", function() {
-
+	console.log($labels);
 	new EPrints_Screen_Report_Loader( {
 		ids: $json,
 		step: 20,
 		prefix: '$prefix',
 		url: '$url',
-		parameters: '$parameters',
-		container_id: '$container_id' 
+		parameters: '$parameters',		
+		container_id: '$container_id',
+		show_compliance: $show_compliance,
+		labels: $labels
 	} ).execute();
 
 });

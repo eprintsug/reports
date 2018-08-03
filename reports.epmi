@@ -27,13 +27,6 @@
           <filesize>1400</filesize>
         </file>
         <file>
-          <filename>epm/reports/epm/reports-1.1.0.epm</filename>
-          <mime_type>application/xml</mime_type>
-          <hash>ea356646d1373e0886c44fbf6108e4d3</hash>
-          <hash_type>MD5</hash_type>
-          <filesize>127393</filesize>
-        </file>
-        <file>
           <filename>lang/en/phrases/reports.xml</filename>
           <mime_type>inode/symlink</mime_type>
           <hash>876215ac9a7f56816f8f308261bbcd1f</hash>
@@ -71,9 +64,9 @@
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
           <mime_type>inode/symlink</mime_type>
-          <hash>1d839fa2b8becbd027b6dd5c4293be1d</hash>
+          <hash>09171241c6ca9c3c32a3d83579cf8de0</hash>
           <hash_type>MD5</hash_type>
-          <filesize>23360</filesize>
+          <filesize>23668</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/Example.pm</filename>
@@ -97,11 +90,18 @@
           <filesize>516</filesize>
         </file>
         <file>
+          <filename>static/images/epm/reports.png</filename>
+          <mime_type>image/png</mime_type>
+          <hash>6ce908dd56ef83fbfd2788dad9d251a6</hash>
+          <hash_type>MD5</hash_type>
+          <filesize>18702</filesize>
+        </file>
+        <file>
           <filename>static/javascript/auto/reports.js</filename>
           <mime_type>inode/symlink</mime_type>
-          <hash>bf6c593a1f07decb82dd8cc85712dd60</hash>
+          <hash>45a3c2ff0fb4df40296c25843d8ea626</hash>
           <hash_type>MD5</hash_type>
-          <filesize>9339</filesize>
+          <filesize>10019</filesize>
         </file>
         <file>
           <filename>static/style/auto/reports.css</filename>
@@ -116,8 +116,22 @@
       <main>static/style/auto/reports.css</main>
       <content>install</content>
     </document>
+    <document>
+      <files>
+        <file>
+          <filename>static/images/epm/reports.png</filename>
+          <mime_type>image/png</mime_type>
+          <hash>6ce908dd56ef83fbfd2788dad9d251a6</hash>
+          <hash_type>MD5</hash_type>
+          <filesize>18702</filesize>
+        </file>
+      </files>
+      <format>image</format>
+      <main>static/images/epm/reports.png</main>
+      <content>coverimage</content>
+    </document>
   </documents>
-  <version>2.0</version>
+  <version>2.1</version>
   <creators>
     <item>
       <name>
@@ -144,4 +158,5 @@
   <datestamp>2017-06-14 15:21:27</datestamp>
   <title>Generic Reporting Framework</title>
   <description>This provides EPrints with a generic framework to generate reports.</description>
+  <icon>images/epm/reports.png</icon>
 </epm>

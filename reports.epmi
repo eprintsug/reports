@@ -64,9 +64,9 @@
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
           <mime_type>inode/symlink</mime_type>
-          <hash>09171241c6ca9c3c32a3d83579cf8de0</hash>
+          <hash>b2e0c5763cb73a2423e507946f5673bc</hash>
           <hash_type>MD5</hash_type>
-          <filesize>23668</filesize>
+          <filesize>23645</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/Example.pm</filename>
@@ -92,9 +92,9 @@
         <file>
           <filename>static/images/epm/reports.png</filename>
           <mime_type>image/png</mime_type>
-          <hash>6ce908dd56ef83fbfd2788dad9d251a6</hash>
+          <hash>11fe836e11dc3075b829e17f64caf50d</hash>
           <hash_type>MD5</hash_type>
-          <filesize>18702</filesize>
+          <filesize>24469</filesize>
         </file>
         <file>
           <filename>static/javascript/auto/reports.js</filename>
@@ -121,9 +121,9 @@
         <file>
           <filename>static/images/epm/reports.png</filename>
           <mime_type>image/png</mime_type>
-          <hash>6ce908dd56ef83fbfd2788dad9d251a6</hash>
+          <hash>11fe836e11dc3075b829e17f64caf50d</hash>
           <hash_type>MD5</hash_type>
-          <filesize>18702</filesize>
+          <filesize>24469</filesize>
         </file>
       </files>
       <format>image</format>

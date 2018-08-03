@@ -645,7 +645,6 @@ sub render
 
 	$chunk->appendChild( $repo->make_javascript( <<"EOJ" ) );
 document.observe("dom:loaded", function() {
-	console.log($labels);
 	new EPrints_Screen_Report_Loader( {
 		ids: $json,
 		step: 20,

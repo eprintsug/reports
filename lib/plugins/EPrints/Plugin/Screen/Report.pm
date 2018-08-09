@@ -2,7 +2,7 @@ package EPrints::Plugin::Screen::Report;
 
 # Abstract class that handles the Report tools
 
-use JSON;
+use JSON qw(encode_json);
 use EPrints::Plugin::Screen;
 @ISA = ( 'EPrints::Plugin::Screen' );
 

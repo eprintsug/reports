@@ -64,9 +64,9 @@
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
           <mime_type>inode/symlink</mime_type>
-          <hash>b2e0c5763cb73a2423e507946f5673bc</hash>
+          <hash>dbfb31b8de88f76805f67ce2c9b37bf7</hash>
           <hash_type>MD5</hash_type>
-          <filesize>23645</filesize>
+          <filesize>23661</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/Example.pm</filename>
@@ -131,7 +131,7 @@
       <content>coverimage</content>
     </document>
   </documents>
-  <version>2.1</version>
+  <version>2.2</version>
   <creators>
     <item>
       <name>

@@ -102,7 +102,11 @@ sub _create_search
 
 	my $session = $self->{session};
         my $report_plugin = $self->{processor}->screen;
-        $self->{processor}->{report_plugin} = $report_plugin;
+	# Do not create a search config if this is not configured in the report
+	return if ! defined $report_plugin->{searchdatasetid};
+        
+	$self->{processor}->{report_plugin} = $report_plugin;
+	
         my $report_ds = $session->dataset( $report_plugin->{searchdatasetid} );
         if( defined $report_ds )
         {

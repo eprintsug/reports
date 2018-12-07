@@ -12,6 +12,12 @@ div.ep_report_row_ok {
 	opacity: 0.8;
 }
 
+div.ep_report_row_ok.ep_report_row_no_compliance {
+        border-left: solid 7px #1b4b73;
+	opacity: 0.8;
+}
+
+
 div.ep_report_grouping {
 	margin: 20px 0px 10px 0px;
 	font-size: 16px;
@@ -91,4 +97,13 @@ div#ep_report_export_content_inner .report_export_options h4
 div#ep_report_export_content_inner .report_export_options ul
 {
 	padding: 0 10px 0 0;
+}
+
+/* HTML Reports */
+a.html_report_print{
+	text-decoration: none;	
+}
+
+a.html_report_print:hover{
+	color: white;	
 }

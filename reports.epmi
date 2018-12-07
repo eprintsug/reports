@@ -15,9 +15,9 @@
         <file>
           <filename>epm/reports/cfg/cfg.d/z_reports.pl</filename>
           <mime_type>text/plain</mime_type>
-          <hash>970b87ef9d15166a9841911ac583b88a</hash>
+          <hash>385eec38a9a534ff630359efd9b5460b</hash>
           <hash_type>MD5</hash_type>
-          <filesize>357</filesize>
+          <filesize>2593</filesize>
         </file>
         <file>
           <filename>epm/reports/cfg/cfg.d/z_search_reports.pl</filename>
@@ -28,31 +28,52 @@
         </file>
         <file>
           <filename>lang/en/phrases/reports.xml</filename>
-          <mime_type>inode/symlink</mime_type>
-          <hash>876215ac9a7f56816f8f308261bbcd1f</hash>
+          <mime_type>application/xml</mime_type>
+          <hash>2c63892db4ecf79ed204400c9acb3f76</hash>
           <hash_type>MD5</hash_type>
-          <filesize>929</filesize>
+          <filesize>2386</filesize>
+        </file>
+        <file>
+          <filename>plugins/EPrints/Plugin/Export/Grid2.pm</filename>
+          <mime_type>text/plain</mime_type>
+          <hash>facf6666f0b9757b6b43e6fd20559099</hash>
+          <hash_type>MD5</hash_type>
+          <filesize>7787</filesize>
+        </file>
+        <file>
+          <filename>plugins/EPrints/Plugin/Export/MultilineCSV2.pm</filename>
+          <mime_type>text/plain</mime_type>
+          <hash>ece09c3f7932a096c5cf14b6165a579d</hash>
+          <hash_type>MD5</hash_type>
+          <filesize>2279</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Export/Report.pm</filename>
-          <mime_type>inode/symlink</mime_type>
+          <mime_type>text/plain</mime_type>
           <hash>4532f1d3111eede3fe6a4e8c66965895</hash>
           <hash_type>MD5</hash_type>
           <filesize>2556</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Export/Report/CSV.pm</filename>
-          <mime_type>inode/symlink</mime_type>
-          <hash>718c048fb5544396aba731a277d68951</hash>
+          <mime_type>text/plain</mime_type>
+          <hash>9ca03f1aa33ed8390c18f29c2ed96d16</hash>
           <hash_type>MD5</hash_type>
-          <filesize>5235</filesize>
+          <filesize>1785</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Export/Report/CSV/Example.pm</filename>
-          <mime_type>inode/symlink</mime_type>
+          <mime_type>text/plain</mime_type>
           <hash>0e433b1b61f549da00316e4971512570</hash>
           <hash_type>MD5</hash_type>
           <filesize>409</filesize>
+        </file>
+        <file>
+          <filename>plugins/EPrints/Plugin/Export/Report/HTML.pm</filename>
+          <mime_type>text/plain</mime_type>
+          <hash>666f802bd567fead817bd3228b7dc78e</hash>
+          <hash_type>MD5</hash_type>
+          <filesize>5596</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Export/Report/JSON.pm</filename>
@@ -63,31 +84,45 @@
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
-          <mime_type>inode/symlink</mime_type>
-          <hash>dbfb31b8de88f76805f67ce2c9b37bf7</hash>
+          <mime_type>text/plain</mime_type>
+          <hash>7b964bfb863e905a17713c6cea2e0653</hash>
           <hash_type>MD5</hash_type>
-          <filesize>23661</filesize>
+          <filesize>37088</filesize>
+        </file>
+        <file>
+          <filename>plugins/EPrints/Plugin/Screen/Report/EPrint.pm</filename>
+          <mime_type>text/plain</mime_type>
+          <hash>739d4c17a7ebb5d22292df090890df76</hash>
+          <hash_type>MD5</hash_type>
+          <filesize>1981</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/Example.pm</filename>
-          <mime_type>inode/symlink</mime_type>
+          <mime_type>text/plain</mime_type>
           <hash>1c2d8c6ae6fc484e6bb1a93978ec88b9</hash>
           <hash_type>MD5</hash_type>
           <filesize>1893</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/Example/Articles.pm</filename>
-          <mime_type>inode/symlink</mime_type>
+          <mime_type>text/plain</mime_type>
           <hash>4c43aa504919a5484599af05f9b146b1</hash>
           <hash_type>MD5</hash_type>
           <filesize>499</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/Example/ConferenceItems.pm</filename>
-          <mime_type>inode/symlink</mime_type>
+          <mime_type>text/plain</mime_type>
           <hash>3c8b240f6728e37d91784edf2409a85c</hash>
           <hash_type>MD5</hash_type>
           <filesize>516</filesize>
+        </file>
+        <file>
+          <filename>plugins/EPrints/Plugin/Screen/Report/User.pm</filename>
+          <mime_type>text/plain</mime_type>
+          <hash>73f7a348e6930ef92d79de79c46be6de</hash>
+          <hash_type>MD5</hash_type>
+          <filesize>1893</filesize>
         </file>
         <file>
           <filename>static/images/epm/reports.png</filename>
@@ -98,21 +133,21 @@
         </file>
         <file>
           <filename>static/javascript/auto/reports.js</filename>
-          <mime_type>inode/symlink</mime_type>
-          <hash>45a3c2ff0fb4df40296c25843d8ea626</hash>
+          <mime_type>text/plain</mime_type>
+          <hash>433f2b10185e875b322d0566e4d787c8</hash>
           <hash_type>MD5</hash_type>
-          <filesize>10019</filesize>
+          <filesize>12566</filesize>
         </file>
         <file>
           <filename>static/style/auto/reports.css</filename>
-          <mime_type>inode/symlink</mime_type>
-          <hash>8056224c2a6f1c0d242e3dcc323c8a71</hash>
+          <mime_type>text/x-asm</mime_type>
+          <hash>b6c44764b4d4d9bd07dafde0bd9cfaaf</hash>
           <hash_type>MD5</hash_type>
-          <filesize>1698</filesize>
+          <filesize>1922</filesize>
         </file>
       </files>
-      <mime_type>inode/symlink</mime_type>
-      <format>other</format>
+      <mime_type>text/x-asm</mime_type>
+      <format>text</format>
       <main>static/style/auto/reports.css</main>
       <content>install</content>
     </document>
@@ -131,7 +166,7 @@
       <content>coverimage</content>
     </document>
   </documents>
-  <version>2.2</version>
+  <version>3.0</version>
   <creators>
     <item>
       <name>
@@ -157,6 +192,6 @@
   </creators>
   <datestamp>2017-06-14 15:21:27</datestamp>
   <title>Generic Reporting Framework</title>
-  <description>This provides EPrints with a generic framework to generate reports.</description>
+  <description>This provides EPrints with a generic framework to generate reports, along with reports for reporting on EPrints and Users.</description>
   <icon>images/epm/reports.png</icon>
 </epm>

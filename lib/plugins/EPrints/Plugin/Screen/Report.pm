@@ -83,9 +83,15 @@ sub export
 	my $plugin = $self->{processor}->{plugin};
 	return $self->SUPER::export if !defined $plugin;
 
+	my $items = $self->items;
+	if( $plugin->{grouped} && defined $self->{processor}->{group} ) #some export plugins can accept groupings
+	{
+		$items = $self->get_grouped_items( $items, 0 );
+	}
+
 	$plugin->initialise_fh( \*STDOUT );
 	$plugin->output_list(
-		list => $self->items,
+		list => $items,
 		fh => \*STDOUT,
 		exportfields => $self->{processor}->{exportfields},
 		dataset => $self->{processor}->{dataset},
@@ -102,17 +108,17 @@ sub _create_search
 
 	my $session = $self->{session};
         my $report_plugin = $self->{processor}->screen;
+
 	# Do not create a search config if this is not configured in the report
-	return if ! defined $report_plugin->{searchdatasetid};
-        
+  	return if ! defined $report_plugin->{searchdatasetid};
 	$self->{processor}->{report_plugin} = $report_plugin;
-	
+
         my $report_ds = $session->dataset( $report_plugin->{searchdatasetid} );
         if( defined $report_ds )
         {
                 $self->{processor}->{datasetid} = $report_ds->base_id;
-
                 my $sconf = $report_ds->search_config( $report_plugin->{sconf} );
+	
                 my $format = "report/" . $report_ds->base_id;
                 $self->{processor}->{search} = $session->plugin( "Search" )->plugins(
                         {
@@ -186,11 +192,9 @@ sub properties_from
 	}
 
 	# sf2 - TODO - bark if dataset is not set? perhaps there are other ways to get the objects from...
-
-
 	my $report = $self->get_report();
 
-	#get a search object if we have one from a previous search action, so that we might later use it to do an export action
+	#get a search object if we have one from a previous search action, so that we might later use it to do an export or search action
 	$self->_create_search;	
 	if( defined $self->repository->param( "search" ) )
 	{
@@ -198,7 +202,6 @@ sub properties_from
 		$self->{processor}->{export_search} = 1;
 	}
 	
-
 	my $format = $self->repository->param( "export" );
 	if( $format && $report )
 	{
@@ -221,6 +224,40 @@ sub properties_from
 			}
 		}
 	}
+
+	my $sort = $self->repository->param( "sort" );
+	if( defined $sort )
+	{
+		$self->{processor}->{sort} = $sort;
+	}
+
+	my $group = $self->repository->param( "group" );
+	$self->{processor}->{group_exp} = $group; #store the group expression for later use
+	
+	#decode the group expression
+	my %group_opts;
+	if( defined $group )
+	{
+		#get field and associated configuration about the group, e.g. res, truncate, reverse_order etc.
+		my @group = split(/;/, $group );
+		my $first = 1;
+		foreach my $g (@group)
+		{
+			if( $first )
+			{
+				$group = $g;
+			}
+			else
+			{
+				my @opts = split(/=/, $g );
+				$group_opts{$opts[0]} = $opts[1];		
+			}
+			$first = 0;
+		}
+		$self->{processor}->{group} = $group;
+		$self->{processor}->{group_opts} = \%group_opts;
+	}
+
 	$self->{processor}->{exportfields} = \@exportfields;
 }
 		
@@ -241,8 +278,14 @@ sub items
        	{
 		my $report = $self->{processor}->{report_plugin};	
 		$report->apply_filters if $report->can( 'apply_filters' );
-	
-		return $self->{processor}->{search}->perform_search;
+
+		my $items = $self->{processor}->{search}->perform_search;
+
+		if( defined $self->{processor}->{sort} )
+		{	
+			$items = $items->reorder( $self->{processor}->{sort} );
+		}
+		return $items;
 	}
 	elsif( defined $self->{processor}->{dataset} ) 
 	{
@@ -250,10 +293,14 @@ sub items
 		if( defined $self->param( 'custom_order' ) )
 		{
 			$search_opts{custom_order} = $self->param( 'custom_order' );
+		}
+
+		if( defined $self->{processor}->{sort} ) #an ordering specified by the user should trump the reports custom order
+		{
+			$search_opts{custom_order} = $self->{processor}->{sort};
 		}	
 		return $self->{processor}->{dataset}->search( %search_opts );
 	}
-
 	# we can't return an EPrints::List if {dataset} is not defined
 	return undef;
 }
@@ -428,6 +475,7 @@ sub render_splash_page
 	#preset reports
 	push @labels, $repo->html_phrase( "reports_preset" );
 	my $preset = $repo->make_element( "div" );
+	my $presets_added = 0;
 
 	# top category: by classname > Report::ROS::SomeReport1, Report::ROS::SomeReport2
 
@@ -437,37 +485,43 @@ sub render_splash_page
 	my $cat = "";
 	my $cat_li = undef; 
 	my $cat_ul = undef;
-
+	
+	#prepare hash of reporting plugins
+	my %report_hash;
 	foreach my $report_plugin ( sort { $a->get_subtype cmp $b->get_subtype } @plugins )
 	{
 		my $plugin_cat = $report_plugin->get_subtype;
-		$plugin_cat =~ s/^Report::([^:]+):?:?(.*)$/$1/g;
+		$plugin_cat =~ s/^Report::([^:]+):?:?(.*)$/$1/g;	
 
-		# render top-category, if needed	
-		if( $cat ne $plugin_cat )
+		if( $cat ne $plugin_cat ) #we have a top-category
 		{
 			$cat = $plugin_cat;
-			$cat_ul = undef;
-
-			$cat_li = $ul->appendChild( $self->repository->make_element( 'li' ) );
-			$cat_li->appendChild( $self->repository->html_phrase( "Plugin/Screen/Report/$cat:title" ) );
+			$report_hash{$cat} = [];
 		}
 
 		if( EPrints::Utils::is_set( $2 ) )
 		{
-			# then we hit a sub-plugin eg. Screen::Report::$category::$report <- $2 == $report here
-			if( !defined $cat_ul )
-			{
-				$cat_ul = $cat_li->appendChild( $self->repository->make_element( 'ul', class => 'ep_report_items' ) );
-			}
-
-			# also needs a link
-			my $sub_li = $cat_ul->appendChild( $self->repository->make_element( 'li' ) );
-			$sub_li->appendChild( $report_plugin->render_action_link );
+			push @{$report_hash{$cat}}, $report_plugin;
 		}
-		else
+	}
+	
+	for my $top_cat( sort keys %report_hash )
+	{
+		my @report_plugins = @{$report_hash{$top_cat}};
+		if( scalar( @report_plugins ) > 0 )
 		{
-			$cat_ul = undef;
+			#render top-category
+			$cat_li = $ul->appendChild( $self->repository->make_element( 'li' ) );
+			$cat_li->appendChild( $self->repository->html_phrase( "Plugin/Screen/Report/$top_cat:title" ) );
+
+			$cat_ul = $cat_li->appendChild( $self->repository->make_element( 'ul', class => 'ep_report_items' ) );
+
+			foreach my $r ( @report_plugins )
+			{
+				my $sub_li = $cat_ul->appendChild( $self->repository->make_element( 'li' ) );
+				$sub_li->appendChild( $r->render_action_link );
+				$presets_added++;
+			}
 		}
 	}
 
@@ -484,12 +538,13 @@ sub render_splash_page
 	my $report_select = $repo->make_element( "select", name=>"report", id=>"select_report" );
 	my %search_forms;
 	my $custom_reports = 0;
-	foreach my $report_plugin ( @plugins )
+	#foreach my $report_plugin ( @plugins )
+	foreach my $report_plugin ( sort { $a->get_subtype cmp $b->get_subtype } @plugins )
 	{
 		if( $report_plugin->param( "custom" ) )
 		{	
 			$custom_reports++;
-			my $formid = $report_plugin->{searchdatasetid} . "_report";
+			my $formid = $report_plugin->{sconf};
 
 			#add to select component
 			my $id = $report_plugin->{report};
@@ -502,16 +557,28 @@ sub render_splash_page
 			#get report dataset and appropriate search config
 			my $report_ds = $repo->dataset( $report_plugin->{searchdatasetid} );
 			my $sconf = $report_ds->search_config( $report_plugin->{sconf} ) ;
-		
-			my $search = EPrints::Search->new(
-		                keep_cache => 1,
-	                	session => $repo,
-		                dataset => $report_ds,
-		                %{$sconf}
-			);
+			#my $search = EPrints::Search->new(
+		        #        keep_cache => 1,
+	                #	session => $repo,
+		        #        dataset => $report_ds,
+		        #        %{$sconf}
+			#);
+
+			my $format = "report/" . $report_ds->base_id;
+	                my $searchexp = $repo->plugin( "Search" )->plugins(
+                        	{
+                                	keep_cache => 1,
+	                                session => $self->{session},
+        	                        dataset => $report_ds,
+                	                %{$sconf}
+                        	},
+                        type => "Search",
+                        can_search => $format,
+                	);	
+			$searchexp->from_form;
 
 			#generate the form
-			my $frag = $self->render_search_fields( $search );
+			my $frag = $self->render_search_fields( $searchexp );
 			$search_forms{$formid} = $frag unless exists $search_forms{$formid};
 		}	
 	}
@@ -532,7 +599,7 @@ sub render_splash_page
 	#javascript for changing forms based on report selection
 	$custom->appendChild( $repo->make_javascript( 'initReportForm();' ) );
 
-	if( $custom_reports ) #set up tab interface
+	if( $custom_reports && $presets_added > 0 ) #set up tab interface
 	{
 		my @labels;
 	        my @panels;
@@ -545,9 +612,13 @@ sub render_splash_page
 
 		return $repo->xhtml->tabs(\@labels, \@panels );
 	}
-	else
+	elsif( $presets_added > 0 )
 	{	
 		return $preset;
+	}
+	else
+	{
+		return $custom;
 	}
 }
 
@@ -556,7 +627,6 @@ sub render_search_fields
         my( $self, $search ) = @_;
 
         my $frag = $self->{session}->make_doc_fragment;
-
         foreach my $sf ( $search->get_non_filter_searchfields )
         {
 	         $frag->appendChild(
@@ -605,6 +675,8 @@ sub render
 	my $chunk = $repo->make_doc_fragment;
 
 	$chunk->appendChild( $self->render_export_bar );
+	$chunk->appendChild( $self->render_group_options );
+	$chunk->appendChild( $self->render_sort_options );
 
 	my $items = $self->items;
 	if( !defined $items || $items->count == 0 )
@@ -612,9 +684,18 @@ sub render
 		# No items message
 	}
 
-	my $item_ids = defined $items ? $items->ids : [];
+	my $json;
 
-	my $json = "[".join(',',@$item_ids)."]";
+	if( defined $self->{processor}->{group} && $self->{processor}->{group} ne "" )
+	{
+		my $grouped = $self->get_grouped_items( $items, 1 );
+		$json = encode_json $grouped;
+	}
+	else
+	{
+		my $item_ids = defined $items ? $items->ids : [];
+		$json = "[".join(',',@$item_ids)."]";
+	}
 
         my $url = $repo->current_url( host => 1 );
         my $parameters = URI->new;
@@ -683,10 +764,20 @@ sub render_export_bar
 	my $form = $self->render_form;
 	$form->setAttribute( method => "get" );
 
-	if( $self->{processor}->{action} eq "search" )
-        {
+	if( defined $self->repository->param( "search" ) || $self->{processor}->{action} eq "search" )
+	{
 		$form->appendChild( $repo->render_hidden_field( "search",  $self->{processor}->{search}->serialise) );
 	}
+		
+	if( defined $self->{processor}->{sort} )
+	{
+		$form->appendChild( $repo->render_hidden_field( "sort",  $self->{processor}->{sort} ) );
+	}	
+
+	if( defined $self->{processor}->{group_exp} )
+	{
+		$form->appendChild( $repo->render_hidden_field( "group",  $self->{processor}->{group_exp} ) );
+	}	
 
 	if( !defined( $repo->config( $self->{export_conf}, "exportfields" ) ) )
 	{
@@ -725,25 +816,18 @@ sub render_export_bar
 			my $count = 0; #count how many fields we add
 			foreach my $fieldname( @{$repo->config( $self->{export_conf}, "exportfields" )->{$key}} )
 			{
-					my $field = EPrints::Utils::field_from_config_string( $report_ds, $fieldname );
-			
+				if( defined $repo->config( $self->{export_conf}, "customer_export" ) && exists ${$repo->config( $self->{export_conf}, "custom_export" )}{$fieldname} ) #no field in dataset, but we have a custom export function instead 
+				{
 					$count++;
+					$self->_export_field_checkbox( $repo, $fieldname, $ul, $repo->html_phrase( "exportfieldoptions:$fieldname" ) ); 
+				}
+				elsif( $report_ds->has_field( $fieldname ) )
+				{
+					my $field = EPrints::Utils::field_from_config_string( $report_ds, $fieldname );
+					$count++;
+       			        	$self->_export_field_checkbox( $repo, $fieldname, $ul, $field->render_name );
 
-	 				my $li = $repo->make_element( "li" );
-		                	$ul->appendChild( $li );
-
-	        		        my $checkbox = $repo->make_element( "input", type => "checkbox", id => $fieldname, name => $fieldname, value => $fieldname );	
-					if( ( grep { $fieldname eq $_ } @{$repo->config( $self->{export_conf}, "exportfield_defaults" )} ) || ( scalar( @{$repo->config( $self->{export_conf}, "exportfield_defaults" )} ) == 0 ) )
-					{
-						#only check defaults or check everything if defaults not defined
-						$checkbox->setAttribute( "checked", "yes" );
-					}
-
-			                my $label = $repo->make_element( "label", for => $fieldname );
-        			        $label->appendChild( $field->render_name );
-
-	                		$li->appendChild( $checkbox );
-	        	        	$li->appendChild( $label );
+				}
 			}
 			if( $count ) #only add options if we have any fields to show
 			{
@@ -780,6 +864,173 @@ sub render_export_bar
 	$chunk->appendChild( $box );
 
 	return $chunk;
+}
+
+sub render_sort_options
+{
+	my( $self ) = @_;
+
+	my $repo = $self->repository;
+
+	my $chunk = $repo->make_doc_fragment;
+
+	return $chunk unless( defined( $repo->config( $self->{sort_conf}, "sortfields" ) ) );
+
+	my $sort_conf = $repo->config( $self->{sort_conf}, "sortfields" );
+
+	#build the form
+	my $form = $self->render_form;
+	$form->setAttribute( name => "sort_report" );
+        $form->setAttribute( method => "get" );
+	$chunk->appendChild( $form );
+	
+	if( defined $repo->param( "search" ) || $self->{processor}->{action} eq "search" )
+	{
+		$form->appendChild( $repo->render_hidden_field( "search",  $self->{processor}->{search}->serialise) );
+	}
+
+	if( defined $self->{processor}->{group_exp} )
+	{
+		$form->appendChild( $repo->render_hidden_field( "group",  $self->{processor}->{group_exp} ) );
+	}
+
+	#display the links that will trigger the form
+	my $first = 1;
+	my $sort_links = $repo->make_doc_fragment;
+	foreach my $sort_name ( keys %{$sort_conf} )
+        {
+		my $sort_value = $sort_conf->{$sort_name};
+		if( $first )
+		{
+			$form->appendChild( $repo->render_hidden_field( "sort", $sort_value) );
+		}
+
+		if( !$first )
+                {
+                	$sort_links->appendChild( $repo->html_phrase( "Update/Views:group_seperator" ) );
+                }
+		
+		if( defined $self->{processor}->{sort} && $self->{processor}->{sort} eq $sort_value )
+		{
+			my $strong = $repo->make_element( "strong" );
+			$strong->appendChild( $repo->html_phrase( $self->{sort_conf} . ":sort:" . $sort_name ) );
+			$sort_links->appendChild( $strong );
+		}
+		else
+		{
+			my $link = $repo->render_link( 'javascript:sort_report("'.$sort_value.'")' );	
+			$link->appendChild( $repo->html_phrase( $self->{sort_conf} . ":sort:" . $sort_name ) );
+			$sort_links->appendChild( $link );
+		}
+		$first = 0;
+        }           
+	$chunk->appendChild( $repo->html_phrase( "Report:sort_links", links=>$sort_links ) );
+	return $chunk;
+}
+
+
+sub render_group_options
+{
+	my( $self ) = @_;
+
+	my $repo = $self->repository;
+
+	my $chunk = $repo->make_doc_fragment;
+
+	return $chunk unless( defined( $repo->config( $self->{group_conf}, "groupfields" ) ) );
+
+	my $group_conf = $repo->config( $self->{group_conf}, "groupfields" );
+
+	#build the form
+	my $form = $self->render_form;
+	$form->setAttribute( name => "group_report" );
+        $form->setAttribute( method => "get" );
+	$chunk->appendChild( $form );
+	
+	if( defined $repo->param( "search" ) || $self->{processor}->{action} eq "search" )
+	{
+		$form->appendChild( $repo->render_hidden_field( "search",  $self->{processor}->{search}->serialise) );
+	}
+
+	if( defined $self->{processor}->{sort} )
+	{
+		$form->appendChild( $repo->render_hidden_field( "sort",  $self->{processor}->{sort} ) );
+	}
+
+	#display the links that will trigger the form
+	my $first = 1;
+	my $group_links = $repo->make_doc_fragment;
+	foreach my $group_value ( @{$group_conf} )
+        {
+		my ($group_field) = split(/;/, $group_value );
+		if( $first )
+		{
+			$form->appendChild( $repo->render_hidden_field( "group", $group_value) );
+		}
+
+		if( !$first )
+                {
+                	$group_links->appendChild( $repo->html_phrase( "Update/Views:group_seperator" ) );
+                }
+		
+		if( defined $self->{processor}->{group} && $self->{processor}->{group} eq $group_field )
+		{
+			my $strong = $repo->make_element( "strong" );
+			$strong->appendChild( $repo->html_phrase( $self->{group_conf} . ":group:" . $group_field ) );
+			$group_links->appendChild( $strong );
+		}
+		else
+		{
+			my $link = $repo->render_link( 'javascript:group_report("'.$group_value.'")' );	
+			$link->appendChild( $repo->html_phrase( $self->{group_conf} . ":group:" . $group_field ) );
+			$group_links->appendChild( $link );
+		}
+		$first = 0;
+        }           
+	
+	#no grouping link at the end
+	$group_links->appendChild( $repo->html_phrase( "Update/Views:group_seperator" ) );
+	if( defined $self->{processor}->{group} && $self->{processor}->{group} ne "" )
+	{
+		my $link = $repo->render_link( 'javascript:group_report("")' );	
+		$link->appendChild( $repo->html_phrase( "report:no_grouping" ) );
+		$group_links->appendChild( $link );
+	}
+	else
+	{
+		my $strong = $repo->make_element( "strong" );
+ 		$strong->appendChild( $repo->html_phrase( "report:no_grouping" ) );
+		$group_links->appendChild( $strong );
+	}
+	
+	$chunk->appendChild( $repo->html_phrase( "Report:group_links", links=>$group_links ) );
+
+	return $chunk;
+}
+
+
+#adds a new checkbox to allow the user to choose which fields to export
+sub _export_field_checkbox
+{
+	my( $self, $repo, $fieldname, $ul, $fieldlabel ) = @_;
+
+	my $li = $repo->make_element( "li" );
+	$ul->appendChild( $li );
+
+        my $checkbox = $repo->make_element( "input", type => "checkbox", id => $fieldname, name => $fieldname, value => $fieldname );
+	if( defined $repo->config( $self->{export_conf}, "exportfield_defaults" ) )
+	{
+		if( ( grep { $fieldname eq $_ } @{$repo->config( $self->{export_conf}, "exportfield_defaults" )} ) || ( scalar( @{$repo->config( $self->{export_conf}, "exportfield_defaults" )} ) == 0 ) )
+		{
+			#only check defaults or check everything if defaults not defined
+			$checkbox->setAttribute( "checked", "yes" );
+		}
+	}
+	my $label = $repo->make_element( "label", for => $fieldname );
+	$label->appendChild( $fieldlabel );
+
+	$li->appendChild( $checkbox );
+	$li->appendChild( $label );
 }
 
 ### utility methods
@@ -874,5 +1125,201 @@ sub report_plugins
         return @plugins;
 }
 
+#returns a hash of values mapped to a label and a list
+#if ids_only is set the list of items are just represented by their id (used by report JS)
+sub get_grouped_items
+{
+	my( $self, $items, $ids_only ) = @_;
+	my $session = $self->{session};
+	my %grouped;
+
+	my $grouping = $self->{processor}->{group};
+
+	my $metafield = $items->get_dataset->field( $grouping );
+
+	#set group_opts if appropriate
+	if( defined $self->{processor}->{group_opts} )
+	{
+		if( $metafield->type eq "date" )
+		{
+			$metafield->{render_res} = $self->{processor}->{group_opts}->{res} if exists $self->{processor}->{group_opts}->{res};
+		}
+	}
+
+	#create a hash of field values to items (or item ids)
+	$items->map( sub {
+	       	my( $session, $dataset, $item ) = @_;
+		
+		my $multiple = $metafield->get_property( "multiple" );
+		my @group_values;
+		if( $multiple )
+                {
+			@group_values = @{$item->value( $grouping )};
+		}
+		else
+		{			
+			@group_values = ($item->value( $grouping ));
+		}
+	
+		if( scalar @group_values > 0 )
+		{
+			foreach my $group_value ( @group_values )
+			{
+				my $group_id = $metafield->get_id_from_value( $session, $group_value );
+				#truncate group if appropriate
+				if( defined $self->{processor}->{group_opts} )
+				{
+					$group_id =  substr( "\u$group_id", 0, $self->{processor}->{group_opts}->{truncate} ) if exists $self->{processor}->{group_opts}->{truncate};
+				}
+
+		        	if( exists $grouped{$group_id} ) #we've already set this list up, push a new item on to the list
+		               	{
+					if( $ids_only ) #sometimes we only want ids rather than the whole item
+					{
+						push @{$grouped{$group_id}}, $item->id;
+					}
+					else
+					{
+						push @{$grouped{$group_id}}, $item;
+					}
+	       		        }
+        	      		else #set up a list for this group
+	        	       	{
+					my @grouped_items;
+					if( $ids_only ) #sometimes we only want ids rather than the whole item
+		                        {	
+        		                        @grouped_items = ($item->id);
+                		        }
+	                	        else
+        	                	{
+	                	                @grouped_items = ($item);
+        		               	}
+	                	        $grouped{$group_id} = [@grouped_items];
+				}
+               		}
+		}
+		else
+		{
+			my $group_id = "Unspecified " . $metafield->name;
+  	    		if( exists $grouped{$group_id} ) #we've already set this list up, push a new item on to the list
+		  	{
+				if( $ids_only ) #sometimes we only want ids rather than the whole item
+				{
+					push @{$grouped{$group_id}}, $item->id;
+				}
+				else
+				{
+					push @{$grouped{$group_id}}, $item;
+				}
+	       		}
+        	      	else #set up a list for this group
+	        	{
+				my @grouped_items;
+				if( $ids_only ) #sometimes we only want ids rather than the whole item
+		                {	
+        				@grouped_items = ($item->id);
+                		}
+	                	else
+        	                {
+	               	                @grouped_items = ($item);
+        	               	}
+	              	        $grouped{$group_id} = [@grouped_items];
+			}
+		}
+       	} );
+
+	#now sort the groups and add human readable labels
+	my @sorted_groups;
+	
+	my $reverse = 0;
+	$reverse = $self->{processor}->{group_opts}->{reverse_order} if exists $self->{processor}->{group_opts}->{reverse_order};
+	if( $metafield->type eq "namedset" )
+	{
+		my( $tags, $labels ) = $metafield->tags_and_labels( $session );
+		#convert tags to a hash of values and a priority (for ordering)
+		my %priority;
+		my $index = 1;
+		foreach my $tag (@{$tags} )
+		{
+			$priority{$tag} = $index;
+			$index++;
+		}
+		foreach my $key (sort {$priority{$a} <=> $priority{$b}} keys %grouped)
+        	{
+			push @sorted_groups, $self->_make_grouped_item( $grouped{$key}, $labels->{$key} );
+		}
+	}
+	elsif( $metafield->type eq "subject" )
+	{		
+		my $ds = $session->dataset( "subject" );
+		my @values = keys %grouped;
+		my $sorted = $metafield->sort_values( $session, \@values );
+		my %priority;
+		my $index = 1;
+                foreach my $value (@{$sorted} )
+                {
+                        $priority{$value} = $index;
+                        $index++;
+                }
+		foreach my $key (sort {$priority{$a} <=> $priority{$b}} keys %grouped)
+                {
+			my $subj = $ds->dataobj( $key );
+                        push @sorted_groups, $self->_make_grouped_item( $grouped{$key}, EPrints::Utils::tree_to_utf8( $subj->render_description ) ) if defined $subj;
+                }
+	}
+	elsif( $metafield->type eq "date" )
+	{
+		if( $reverse )
+		{
+			foreach my $key ( sort {$b <=> $a} keys %grouped )
+			{
+				push @sorted_groups, $self->_make_grouped_item( $grouped{$key}, $key );
+			}
+		}
+		else
+		{
+			foreach my $key ( sort {$a <=> $b} keys %grouped )
+			{
+				push @sorted_groups, $self->_make_grouped_item( $grouped{$key}, $key );
+			}
+		}
+	}
+	else
+	{	
+		if( $reverse )
+		{
+			foreach my $key ( sort {$b cmp $a} keys %grouped )
+			{
+				push @sorted_groups, $self->_make_grouped_item( $grouped{$key}, $key );
+			}
+		}
+		else
+		{
+			foreach my $key ( sort keys %grouped )
+			{
+				push @sorted_groups, $self->_make_grouped_item( $grouped{$key}, $key );
+			}
+		}
+	}
+
+	#check for any unspecified groups
+	my $group_id = "Unspecified " . $metafield->name;
+	if( exists $grouped{$group_id} )
+	{
+		push @sorted_groups, $self->_make_grouped_item( $grouped{$group_id}, $group_id );
+	}
+
+	return \@sorted_groups;
+}	
+
+
+sub _make_grouped_item
+{
+	my( $self, $list, $label ) = @_;
+	my %group;
+	$group{list} = $list;
+	$group{label} = $label;
+	return \%group;
+}
 
 1;

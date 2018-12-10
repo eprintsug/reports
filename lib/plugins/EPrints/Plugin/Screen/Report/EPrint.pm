@@ -3,7 +3,6 @@ package EPrints::Plugin::Screen::Report::EPrint;
 use EPrints::Plugin::Screen::Report;
 our @ISA = ( 'EPrints::Plugin::Screen::Report' );
 
-use HefceOA::Const;
 use strict;
 
 sub new

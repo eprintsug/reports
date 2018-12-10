@@ -92,9 +92,9 @@
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/EPrint.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>739d4c17a7ebb5d22292df090890df76</hash>
+          <hash>d3e587ba8d8f55c66102969ef662e3cb</hash>
           <hash_type>MD5</hash_type>
-          <filesize>1981</filesize>
+          <filesize>1961</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/Example.pm</filename>
@@ -120,9 +120,9 @@
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/User.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>73f7a348e6930ef92d79de79c46be6de</hash>
+          <hash>cf71f006233ea48a6206f5e186956798</hash>
           <hash_type>MD5</hash_type>
-          <filesize>1893</filesize>
+          <filesize>1873</filesize>
         </file>
         <file>
           <filename>static/images/epm/reports.png</filename>

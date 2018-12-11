@@ -66,14 +66,50 @@ sub header_row
 
 			if ($field->isa("EPrints::MetaField::Multipart"))
 			{
-				my $name = $field->name;
-				push @names, map {
-					$name . '.' . $_->{sub_name}
-				} @{$field->property("fields_cache")};
+				my $parent_name = $field->render_name;
+				if( $field->isa( "EPrints::MetaField::Name" )) #need to deal with legacy phrase id's
+				{
+					foreach my $bit ( $field->get_input_bits() )
+				        {
+						$bit = "given_names" if( $bit eq "given" );
+                                               	$bit = "family_names" if( $bit eq "family" );
+						my $custom_phrase = $field->name . "_" . $bit;
+						if( $ds->repository->get_lang->has_phrase( $custom_phrase ) ) #allow a custom phrase to be used
+						{
+							push @names, $ds->repository->html_phrase( $custom_phrase );
+						}
+						else
+						{
+                                                	push @names, $parent_name . ": " . $ds->repository->html_phrase( "lib/metafield:".$bit );
+						}
+                                        }
+				}
+				else
+				{
+					my $name = $field->name;
+					push @names, map {
+						$name . '.' . $_->{sub_name}
+					} @{$field->property("fields_cache")};
+				}
+			}
+			elsif( $field->isa("EPrints::MetaField::Compound" ) )
+			{
+				foreach my $sub_field (@{$field->property("fields_cache")})
+				{
+					my $custom_phrase = $field->name . "_" . $sub_field->name;
+					if( $ds->repository->get_lang->has_phrase( $custom_phrase ) ) #allow a custom phrase to be used
+                                        {
+                                        	push @names, $ds->repository->html_phrase( $custom_phrase );
+                                        }
+					else
+					{
+						push @names, $field->render_name . ": " . $sub_field->render_name;
+					}
+				}
 			}
 			else
 			{
-				push @names, $field->name;
+				push @names, $field->render_name;
 			}
 		}
 	}		
@@ -237,7 +273,28 @@ sub value_to_rows
 	}
 	elsif ($field->isa("EPrints::MetaField::Multipart"))
 	{
-		push @rows, [map { $value->{$_->{sub_name}} } @{$field->property("fields_cache")}];
+		if( $field->isa( "EPrints::MetaField::Name" )) #need to deal with legacy phrase id's
+                {
+			my @bit_values;
+			foreach my $bit ( $field->get_input_bits() )
+                        {
+				push @bit_values, $value->{$bit};
+        		}	
+			push @rows, \@bit_values;
+	        }
+		else
+		{
+			push @rows, [map { $value->{$_->{sub_name}} } @{$field->property("fields_cache")}];
+		}
+	}
+	elsif ($field->isa("EPrints::MetaField::Compound"))
+	{
+		my @sub_values;
+		foreach my $key (keys %{$value})
+		{
+			push @sub_values, $value->{$key};
+		}
+		push @rows, \@sub_values;
 	}
 	else
 	{

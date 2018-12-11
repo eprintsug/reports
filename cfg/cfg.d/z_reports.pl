@@ -1,7 +1,7 @@
 #
 # EPrints Services - Generic Reporting System
 #
-# Version: 0.1
+# Version: 3.0
 #
 
 
@@ -39,6 +39,7 @@ $c->{eprint_report}->{sortfields} = {
 #export field options
 $c->{eprint_report}->{exportfields} = {
         eprint_report_core => [ qw(
+		eprintid
                 title
                 creators_name
                 abstract
@@ -51,11 +52,12 @@ $c->{eprint_report}->{exportfields} = {
                 ispublished
                 refereed
                 publication
-                document_format
+                documents.format
                 datestamp
         )],
 };
 $c->{eprint_report}->{exportfield_defaults} = [ qw(
+	eprintid
 	title
         creators_name
         abstract
@@ -68,7 +70,7 @@ $c->{eprint_report}->{exportfield_defaults} = [ qw(
         ispublished
         refereed
         publication
-        document_format
+	documents.format
 	datestamp
 )];
 

@@ -15,9 +15,9 @@
         <file>
           <filename>epm/reports/cfg/cfg.d/z_reports.pl</filename>
           <mime_type>text/plain</mime_type>
-          <hash>385eec38a9a534ff630359efd9b5460b</hash>
+          <hash>334237b831581075209dbbedf084d878</hash>
           <hash_type>MD5</hash_type>
-          <filesize>2593</filesize>
+          <filesize>2609</filesize>
         </file>
         <file>
           <filename>epm/reports/cfg/cfg.d/z_search_reports.pl</filename>
@@ -36,9 +36,9 @@
         <file>
           <filename>plugins/EPrints/Plugin/Export/Grid2.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>facf6666f0b9757b6b43e6fd20559099</hash>
+          <hash>dd9b2c0a038b1f9f51b618a4b2e11c4b</hash>
           <hash_type>MD5</hash_type>
-          <filesize>7787</filesize>
+          <filesize>9699</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Export/MultilineCSV2.pm</filename>
@@ -71,9 +71,9 @@
         <file>
           <filename>plugins/EPrints/Plugin/Export/Report/HTML.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>666f802bd567fead817bd3228b7dc78e</hash>
+          <hash>8e2ca840f2fd1fa5983bcca0f96a7233</hash>
           <hash_type>MD5</hash_type>
-          <filesize>5596</filesize>
+          <filesize>5578</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Export/Report/JSON.pm</filename>
@@ -85,9 +85,9 @@
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>7b964bfb863e905a17713c6cea2e0653</hash>
+          <hash>210449eac1f7ee02e7519beead2c640b</hash>
           <hash_type>MD5</hash_type>
-          <filesize>37088</filesize>
+          <filesize>37100</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/EPrint.pm</filename>

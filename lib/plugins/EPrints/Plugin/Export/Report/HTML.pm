@@ -145,13 +145,14 @@ sub output_dataobj
 		}
 		else #render normal value like a normal field
 		{
-			my $ds_id = $dataobj->get_dataset_id;
-			my $ds = $repo->dataset( $ds_id );
+			my $ds = $dataobj->dataset;
 			if( $ds->has_field( $f ) )
 			{
+				my $field = EPrints::Utils::field_from_config_string( $ds, $f );
+
 				$table->appendChild( $repo->render_row(
-        	        		$repo->html_phrase( $ds_id."_fieldname_".$f ),
-		                	$dataobj->render_value( $f ) 
+        	        		$field->render_name,
+					$dataobj->render_value( $f ) 
 				) );
 			}
 		}

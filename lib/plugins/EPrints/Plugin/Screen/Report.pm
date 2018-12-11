@@ -816,12 +816,12 @@ sub render_export_bar
 			my $count = 0; #count how many fields we add
 			foreach my $fieldname( @{$repo->config( $self->{export_conf}, "exportfields" )->{$key}} )
 			{
-				if( defined $repo->config( $self->{export_conf}, "customer_export" ) && exists ${$repo->config( $self->{export_conf}, "custom_export" )}{$fieldname} ) #no field in dataset, but we have a custom export function instead 
+				if( defined $repo->config( $self->{export_conf}, "custom_export" ) && exists ${$repo->config( $self->{export_conf}, "custom_export" )}{$fieldname} ) #we have a custom export function instead 
 				{
 					$count++;
 					$self->_export_field_checkbox( $repo, $fieldname, $ul, $repo->html_phrase( "exportfieldoptions:$fieldname" ) ); 
 				}
-				elsif( $report_ds->has_field( $fieldname ) )
+				elsif( defined EPrints::Utils::field_from_config_string( $report_ds, $fieldname ) )
 				{
 					my $field = EPrints::Utils::field_from_config_string( $report_ds, $fieldname );
 					$count++;

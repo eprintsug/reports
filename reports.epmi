@@ -15,9 +15,9 @@
         <file>
           <filename>epm/reports/cfg/cfg.d/z_reports.pl</filename>
           <mime_type>text/plain</mime_type>
-          <hash>334237b831581075209dbbedf084d878</hash>
+          <hash>48c622ad150bea255ba6fbee7e37083b</hash>
           <hash_type>MD5</hash_type>
-          <filesize>2609</filesize>
+          <filesize>2869</filesize>
         </file>
         <file>
           <filename>epm/reports/cfg/cfg.d/z_search_reports.pl</filename>
@@ -29,16 +29,16 @@
         <file>
           <filename>lang/en/phrases/reports.xml</filename>
           <mime_type>application/xml</mime_type>
-          <hash>2c63892db4ecf79ed204400c9acb3f76</hash>
+          <hash>f344518160d45ccd1d1709a926d9e6d1</hash>
           <hash_type>MD5</hash_type>
-          <filesize>2386</filesize>
+          <filesize>2563</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Export/Grid2.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>dd9b2c0a038b1f9f51b618a4b2e11c4b</hash>
+          <hash>83d730999923d798d1acbb44c4a91667</hash>
           <hash_type>MD5</hash_type>
-          <filesize>9699</filesize>
+          <filesize>10222</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Export/MultilineCSV2.pm</filename>
@@ -78,16 +78,16 @@
         <file>
           <filename>plugins/EPrints/Plugin/Export/Report/JSON.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>3ee98189aee3464f0992881814056a72</hash>
+          <hash>3786d272e437a488408e5825270e1609</hash>
           <hash_type>MD5</hash_type>
-          <filesize>6567</filesize>
+          <filesize>6648</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>210449eac1f7ee02e7519beead2c640b</hash>
+          <hash>e88058df69ea1db3f145b316f6d1ada2</hash>
           <hash_type>MD5</hash_type>
-          <filesize>37100</filesize>
+          <filesize>43956</filesize>
         </file>
         <file>
           <filename>plugins/EPrints/Plugin/Screen/Report/EPrint.pm</filename>
@@ -134,16 +134,16 @@
         <file>
           <filename>static/javascript/auto/reports.js</filename>
           <mime_type>text/plain</mime_type>
-          <hash>433f2b10185e875b322d0566e4d787c8</hash>
+          <hash>d02c8742a8d57f71e94e1c62635b94de</hash>
           <hash_type>MD5</hash_type>
-          <filesize>12566</filesize>
+          <filesize>12701</filesize>
         </file>
         <file>
           <filename>static/style/auto/reports.css</filename>
           <mime_type>text/x-asm</mime_type>
-          <hash>b6c44764b4d4d9bd07dafde0bd9cfaaf</hash>
+          <hash>04cbc93d0515c56f56929cd6a16f5a44</hash>
           <hash_type>MD5</hash_type>
-          <filesize>1922</filesize>
+          <filesize>2151</filesize>
         </file>
       </files>
       <mime_type>text/x-asm</mime_type>
@@ -166,7 +166,7 @@
       <content>coverimage</content>
     </document>
   </documents>
-  <version>3.0</version>
+  <version>3.1</version>
   <creators>
     <item>
       <name>

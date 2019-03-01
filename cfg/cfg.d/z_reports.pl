@@ -74,6 +74,9 @@ $c->{eprint_report}->{exportfield_defaults} = [ qw(
 	datestamp
 )];
 
+#set order of export plugins
+$c->{eprint_report}->{export_plugins} = [ qw( Export::Report::CSV Export::Report::HTML Export::Report::JSON )];
+
 #set config for default user report
 $c->{datasets}->{user}->{search}->{user_report} = $c->{search}->{user}; #use the default user search form
 
@@ -91,12 +94,10 @@ $c->{user_report}->{exportfields} = {
 		dept
 		org
 		address
-		counter
 		usertype
 		email
 	)],
 };
-
 
 $c->{user_report}->{exportfield_defaults} = [ qw(
         name
@@ -105,13 +106,13 @@ $c->{user_report}->{exportfield_defaults} = [ qw(
 	dept
 	org
 	address
-	counter
 	usertype
 	email
 )];
 
+#set order of export plugins
+$c->{user_report}->{export_plugins} = [ qw( Export::Report::CSV Export::Report::HTML Export::Report::JSON )];
 
 push @{$c->{user_roles}->{admin}}, qw{
         +report
 };
-

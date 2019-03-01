@@ -99,6 +99,21 @@ div#ep_report_export_content_inner .report_export_options ul
 	padding: 0 10px 0 0;
 }
 
+#ep_report_export_content_inner .select_button
+{
+        float: right;
+}
+
+#custom_report .ep_search_buttons > div
+{
+        display: inline-block;
+}
+
+#custom_report .ep_search_buttons .clear_button
+{
+        margin-left: 2px;
+}
+
 /* HTML Reports */
 a.html_report_print{
 	text-decoration: none;	

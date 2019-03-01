@@ -14,7 +14,7 @@ sub new
 
 	my $self = $class->SUPER::new(%params);
 
-	push @{$self->{actions}}, qw( export search );
+	push @{$self->{actions}}, qw( export search newsearch update );
 
 	$self->{sconf} = "report";
 
@@ -133,6 +133,34 @@ sub _create_search
 	}
 }
 
+sub allow_newsearch { return 1; }
+
+sub allow_update { return 1; }
+
+sub action_newsearch
+{
+        my( $self ) = @_;
+
+        my $session = $self->{session};
+
+        #$self->{processor}->{report} = $session->param( 'report' );
+        #$self->{processor}->{screenid} = $self->{processor}->{report};
+        #$self->{processor}->{action} = "newsearch";
+        #$self->_create_search;
+}
+
+sub action_update
+{
+        my( $self ) = @_;
+
+        my $session = $self->{session};
+
+        #$self->{processor}->{report} = $session->param( 'report' );
+        #$self->{processor}->{screenid} = $self->{processor}->{report};
+        #$self->{processor}->{action} = "newsearch";
+        #$self->_create_search;
+}
+
 sub action_search
 {
 	my( $self ) = @_;
@@ -216,9 +244,18 @@ sub properties_from
 	my @exportfields;
 	if( defined $repo->config( $self->{export_conf}, "exportfields" ) )
 	{
-		foreach my $fieldnames ( values %{$repo->config( $self->{export_conf}, "exportfields" )} )
+		my @keys;
+		if( defined $repo->config( $self->{export_conf}, "exportfield_order" ) )
 		{
-			foreach	my $fieldname ( @{$fieldnames} )
+			@keys = @{$repo->config( $self->{export_conf}, "exportfield_order" )};
+		}
+		else
+		{
+			@keys = keys %{$repo->config( $self->{export_conf}, "exportfields" )}; 
+		}
+		foreach my $key ( @keys )
+		{
+			foreach my $fieldname ( @{$repo->config( $self->{export_conf}, "exportfields" )->{$key}} )
 			{
 				push @exportfields, $fieldname if defined $self->repository->param( $fieldname ); 
 			}
@@ -534,6 +571,8 @@ sub render_splash_page
 	my $custom = $repo->make_element( "div", id=>"custom_report" );
 	my $form = $repo->render_form( "get" );
 
+	$form->appendChild( $self->render_controls( 1 ) );
+
 	#add each report to the select component and generate search form if required
 	my $report_select = $repo->make_element( "select", name=>"report", id=>"select_report" );
 	my %search_forms;
@@ -549,11 +588,19 @@ sub render_splash_page
 			#add to select component
 			my $id = $report_plugin->{report};
 			my $option = $repo->make_element( "option", value => $report_plugin->get_subtype, form => $formid );
-			$option->appendChild( $report_plugin->render_title );
+
+			#set default option for select component if required (i.e. we have come from a refine search or new search link)
+			my $refine_sconf = $self->{session}->param( "sconf" );
+			if( ( $self->{processor}->{action} eq "update" || $self->{processor}->{action} eq "newsearch" ) && defined $refine_sconf && $refine_sconf eq $formid )
+			{
+				$option->setAttribute( selected => "selected" );
+			}
+
+			#set option text and add to select
+  			$option->appendChild( $report_plugin->render_title );
 			$report_select->appendChild( $option );
 
-			#create search form
-			
+			#create search form			
 			#get report dataset and appropriate search config
 			my $report_ds = $repo->dataset( $report_plugin->{searchdatasetid} );
 			my $sconf = $report_ds->search_config( $report_plugin->{sconf} ) ;
@@ -578,7 +625,7 @@ sub render_splash_page
 			$searchexp->from_form;
 
 			#generate the form
-			my $frag = $self->render_search_fields( $searchexp );
+			my $frag = $self->render_search_fields( $searchexp, $formid );
 			$search_forms{$formid} = $frag unless exists $search_forms{$formid};
 		}	
 	}
@@ -610,7 +657,13 @@ sub render_splash_page
 		push @panels, $preset;
 		push @panels, $custom;
 
-		return $repo->xhtml->tabs(\@labels, \@panels );
+		my %opts;
+		if( $self->{processor}->{action} eq "newsearch" || $self->{processor}->{action} eq "update"  )
+		{
+			$opts{current} = 1;
+		}
+
+		return $repo->xhtml->tabs(\@labels, \@panels, %opts );
 	}
 	elsif( $presets_added > 0 )
 	{	
@@ -624,7 +677,14 @@ sub render_splash_page
 
 sub render_search_fields
 {
-        my( $self, $search ) = @_;
+        my( $self, $search, $formid ) = @_;
+
+	my $exp = $self->{session}->param( "exp" );
+	my $sconf = $self->{session}->param( "sconf" );
+        if( defined $exp && defined $sconf && $sconf eq $formid )
+	{
+                $search->from_string( $exp );
+  	}
 
         my $frag = $self->{session}->make_doc_fragment;
         foreach my $sf ( $search->get_non_filter_searchfields )
@@ -645,17 +705,30 @@ sub render_search_fields
 
 sub render_controls
 {
-	my( $self ) = @_;
+	my( $self, $with_js ) = @_;
 
 	my $div = $self->{session}->make_element(
                 "div" ,
                 class => "ep_search_buttons" );
         $div->appendChild( $self->{session}->render_action_buttons(
-                _order => [ "search", "newsearch" ],
-                newsearch => $self->{session}->phrase( "lib/searchexpression:action_reset" ),
+                _order => [ "search" ],
+                #newsearch => $self->{session}->phrase( "lib/searchexpression:action_reset" ),
                 search => $self->{session}->phrase( "lib/searchexpression:action_search" ) )
         );
+	
+	my $xml = $self->{session}->xml;
 
+	if( $with_js )
+	{
+		my $clear_form = $div->appendChild( $self->render_clearform( $xml ) );
+	}
+
+        my $clear_btn = $div->appendChild( $xml->create_element( "button",
+        	type => "button",
+                onclick => "clearForm();",
+                class => "ep_form_action_button clear_button",
+                ) );
+        $clear_btn->appendChild( $xml->create_text_node( $self->{session}->html_phrase( "lib/searchexpression:action_reset" ) ) );
 	return $div;
 }
 
@@ -665,7 +738,7 @@ sub render
 
 	# if users access Screen::Report directly we want to display some sort of menu
 	# where users can select viewable reports
-	if( "EPrints::Plugin::".$self->get_id eq __PACKAGE__ && $self->{processor}->{action} ne "search" )
+	if( ( "EPrints::Plugin::".$self->get_id eq __PACKAGE__ && $self->{processor}->{action} ne "search" ) || $self->{processor}->{action} eq "newsearch" )
 	{	
 		return $self->render_splash_page;
 	}
@@ -677,6 +750,11 @@ sub render
 	$chunk->appendChild( $self->render_export_bar );
 	$chunk->appendChild( $self->render_group_options );
 	$chunk->appendChild( $self->render_sort_options );
+
+	if( $self->{processor}->{action} eq "search" )
+	{
+		$chunk->appendChild( $self->render_refine_search );
+	}
 
 	my $items = $self->items;
 	if( !defined $items || $items->count == 0 )
@@ -745,6 +823,12 @@ document.observe("dom:loaded", function() {
 EOJ
 	$chunk->appendChild( $repo->make_element( 'div', class => 'ep_report_page', id => $container_id ) );
 
+	#show search controls after the results too
+	if( $self->{processor}->{action} eq "search" )
+        {
+                $chunk->appendChild( $self->render_refine_search );
+        }
+
 	return $chunk;
 }
 
@@ -798,15 +882,31 @@ sub render_export_bar
 			labels => {map { $_->get_subtype => $_->get_name } @plugins},
 		) );
 
-
 		#create labels and panels for tabbed interfaced
 		my $xml = $repo->xml;
 		my $xhtml = $repo->xhtml;
 
+		my $select_all = $form->appendChild( $self->render_selectall( $xml ) );
+		my $select_btn = $form->appendChild( $xml->create_element( "button",
+	                    type => "button",
+	                    onclick => "toggleCheckboxes();",
+	                    class => "ep_form_action_button select_button",
+		) );
+	    	$select_btn->appendChild( $xml->create_text_node( $repo->html_phrase( "report_select" ) ) );
+
 		#allow user to choose which fields they want to export
 		my $export_options = $repo->make_element( "div" );
 
-		foreach my $key ( keys %{$repo->config( $self->{export_conf}, "exportfields" )} )
+		my @keys;
+		if( defined $repo->config( $self->{export_conf}, "exportfield_order" ) )
+		{
+			@keys = @{$repo->config( $self->{export_conf}, "exportfield_order" )};
+		}
+		else
+		{
+			@keys = keys %{$repo->config( $self->{export_conf}, "exportfields" )}; 
+		}
+		foreach my $key ( @keys )
 		{
 			#create a new list			
 			my $ul = $repo->make_element( "ul",
@@ -928,7 +1028,6 @@ sub render_sort_options
 	return $chunk;
 }
 
-
 sub render_group_options
 {
 	my( $self ) = @_;
@@ -1008,6 +1107,56 @@ sub render_group_options
 	return $chunk;
 }
 
+sub render_refine_search
+{
+	my( $self ) = @_;
+
+	my $repo = $self->repository;
+
+	my $chunk = $repo->make_doc_fragment;
+	
+	if( defined $repo->param( "search" ) || $self->{processor}->{action} eq "search" )
+	{
+		my $escexp = $self->{processor}->{search}->serialise;
+		my $cacheid = $repo->param( "cache" );
+		my $sconf = $self->{sconf};	
+
+		#set up new search link
+		my $new_baseurl = URI->new( $self->{session}->get_uri );
+        	$new_baseurl->query_form(
+	                screen => "Report",
+			sconf => $sconf,
+        	);
+
+		my $search_links = $repo->make_doc_fragment;
+		my $new_link = $repo->render_link( "$new_baseurl&_action_newsearch=1" );
+	   	$new_link->appendChild( $repo->html_phrase( "lib/searchexpression:new" ) );
+		$search_links->appendChild( $new_link );
+
+		#add a separator...
+		$search_links->appendChild( $repo->html_phrase( "Update/Views:group_seperator" ) );
+
+		#set up refine search link
+		my $refine_baseurl = URI->new( $self->{session}->get_uri );
+        	$refine_baseurl->query_form(
+	        	cache => $cacheid,
+	                exp => $escexp,
+        	        screen => "Report",
+                	dataset => $self->{datasetid},
+                	order => $self->{processor}->{search}->{custom_order},
+			sconf => $sconf,
+        	);
+
+		my $refine_link = $repo->render_link( "$refine_baseurl&_action_update=1" );
+      		$refine_link->appendChild( $repo->html_phrase( "lib/searchexpression:refine" ) );   	         
+	        $search_links->appendChild( $refine_link );
+
+		$chunk->appendChild( $repo->html_phrase( "Report:search_links", links=>$search_links ) );
+	}
+
+	return $chunk;
+}
+
 
 #adds a new checkbox to allow the user to choose which fields to export
 sub _export_field_checkbox
@@ -1074,9 +1223,16 @@ sub export_plugins
         my( $self, $generic ) = @_;
 
 	my @plugin_ids;
-	if( $generic )
+	
+	my $repo = $self->repository;
+
+	if( defined $repo->config( $self->{export_conf}, "export_plugins" ) )
 	{
- 		@plugin_ids = $self->repository->plugin_list(
+		@plugin_ids = @{$repo->config( $self->{export_conf}, "export_plugins" )};
+	}	
+	elsif( $generic )
+	{
+ 		@plugin_ids = $repo->plugin_list(
                 	type => "Export",
 	                can_accept => "report/generic",
         	        is_visible => "staff",
@@ -1085,7 +1241,7 @@ sub export_plugins
 	}
 	else
 	{
-        	@plugin_ids = $self->repository->plugin_list(
+        	@plugin_ids = $repo->plugin_list(
                 	type => "Export",
 	                can_accept => "report/".$self->get_report,
         	        is_visible => "staff",
@@ -1095,7 +1251,7 @@ sub export_plugins
 	my @plugins;
 	foreach my $id ( @plugin_ids )
         {
-                my $p = $self->repository->plugin( "$id" ) or next;
+                my $p = $repo->plugin( "$id" ) or next;
                 push @plugins, $p;
         }
 
@@ -1320,6 +1476,87 @@ sub _make_grouped_item
 	$group{list} = $list;
 	$group{label} = $label;
 	return \%group;
+}
+
+sub render_selectall
+{
+	my( $self, $xml ) = @_;
+
+	my $toggle_function = '
+		var isChecked = true;
+		function toggleCheckboxes() {
+	        	var export_options = document.getElementsByClassName("report_export_options");
+			for( export_option of export_options )
+			{
+				var checkboxes = export_option.getElementsByTagName( "input" )
+				for( checkbox of checkboxes )
+				{
+					if(isChecked)
+					{
+	                			checkbox.checked = "";
+		  	        	}
+					else
+					{
+				                checkbox.checked = "checked";
+					}
+	         		}
+			}
+			isChecked = !isChecked;
+		}';
+	
+	my $js_tag = $xml->create_element( "script" );
+	$js_tag->appendChild( $xml->create_text_node( $toggle_function ) );
+	return $js_tag;
+}
+
+sub render_clearform
+{
+	my( $self, $xml ) = @_;
+
+	my $clear_function = '
+		function clearForm(){
+			var report = document.getElementById( "custom_report" );
+			var form = report.getElementsByClassName("selected_form")[0];
+			var inputs = form.getElementsByTagName( "input" );
+			for( input of inputs )
+			{
+				field_type = input.type.toLowerCase();	
+				console.log(field_type);
+				switch (field_type)
+				{
+				case "text":
+				case "textarea":
+					input.value = "";
+					break;
+				case "radio":
+				case "checkbox":
+					if (input.checked)
+					{
+        					input.checked = false;
+					}
+					break;
+				case "select-one":
+				case "select-multi":
+					input.selectedIndex = -1;
+					break;
+				default:
+					break;
+				}
+			}	
+		        var selects = form.getElementsByTagName( "select" );
+			for( select of selects )
+			{	
+				if( select.hasAttribute("multiple") )
+				{
+					select.selectedIndex = -1;
+				}
+			}		
+
+		}';		
+
+	my $js_tag = $xml->create_element( "script" );
+        $js_tag->appendChild( $xml->create_text_node( $clear_function ) );
+        return $js_tag;
 }
 
 1;

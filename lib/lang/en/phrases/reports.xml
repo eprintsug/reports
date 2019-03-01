@@ -15,6 +15,10 @@
 
 <epp:phrase id="report:no_grouping">No Grouping</epp:phrase>
 
+<epp:phrase id="report_select">Select/Deselect All</epp:phrase>
+
+<epp:phrase id="Report:search_links"><div class="ep_view_group_by"><epc:pin name="links" /></div></epp:phrase>
+
 <!-- the Example reports -->
 <epp:phrase id="Plugin/Screen/Report/Example:title">Example</epp:phrase>
 <epp:phrase id="Plugin/Screen/Report/Example/Articles:title">Articles</epp:phrase>

@@ -181,7 +181,8 @@ sub _epdata_to_json
 	                        next if !$field->get_property( "export_as_xml" );
         	                next if defined $field->{sub_name};
 				my $value = $field->get_value( $epdata );
-				if( exists $repo->config( $self->{report}->{export_conf}, "custom_export" )->{$field->get_name} )
+				if( defined $repo->config( $self->{report}->{export_conf}, "custom_export" ) &&
+					exists $repo->config( $self->{report}->{export_conf}, "custom_export" )->{$field->get_name} )
         	                {
 					$value = $repo->config( $self->{report}->{export_conf}, "custom_export" )->{$field->get_name}->( $epdata, $self->{report} );
 				}

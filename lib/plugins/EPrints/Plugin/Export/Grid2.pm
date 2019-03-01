@@ -198,7 +198,7 @@ sub dataobj_to_rows
 		{
 			if( scalar @{$sub_dataobj_values} > 0 )
 			{
-				$_rows = $self->value_to_rows($field, $sub_dataobj_values);			
+				$_rows = $self->value_to_rows($field, $sub_dataobj_values, $dataobj);			
 			}
 			else #there's no results, but we still need to add an empty cell to the spreadsheet
 			{
@@ -224,7 +224,7 @@ sub dataobj_to_rows
 				{
 					$value = $field->get_value( $dataobj );
 				}
-				$_rows = $self->value_to_rows($field, $value); 		
+				$_rows = $self->value_to_rows($field, $value, $dataobj); 		
 			}			
 		}
 
@@ -262,14 +262,14 @@ sub dataobj_to_rows
 
 sub value_to_rows
 {
-	my ($self, $field, $value) = @_;
+	my ($self, $field, $value, $dataobj) = @_;
 
 	my @rows;
 
 	if (ref($value) eq "ARRAY")
 	{
 		$value = [$field->empty_value] if !@$value;
-		@rows = map { $self->value_to_rows($field, $_)->[0] } @$value;
+		@rows = map { $self->value_to_rows($field, $_, $dataobj)->[0] } @$value;
 	}
 	elsif ($field->isa("EPrints::MetaField::Multipart"))
 	{
@@ -295,6 +295,21 @@ sub value_to_rows
 			push @sub_values, $value->{$key};
 		}
 		push @rows, \@sub_values;
+	}
+	elsif( $field->isa("EPrints::MetaField::Subject"))
+        {
+                if( $value ne "" )
+                {
+                        push @rows, [$field->render_single_value( $field->repository, $value )];
+                }
+                else
+                {
+                        push @rows, [$value];
+                }
+        }
+	elsif( !$field->isa("EPrints::MetaField::Subobject") && $field->is_virtual )
+	{
+		push @rows, [$dataobj->render_value( $field->name )];
 	}
 	else
 	{

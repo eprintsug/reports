@@ -5,10 +5,10 @@
 <epp:phrase id="lib/report:loading">Lade Report...</epp:phrase>
 
 <epp:phrase id="Plugin/Screen/Report:title">Reporte</epp:phrase>
-<epp:phrase id="Plugin/Screen/Report:no_reports">Keine verfügbaren </epp:phrase>
+<epp:phrase id="Plugin/Screen/Report:no_reports">Keine verfügbaren Reporte</epp:phrase>
 
-<epp:phrase id="reports_preset">Vorgefertigte </epp:phrase>
-<epp:phrase id="reports_custom">Eigene </epp:phrase>
+<epp:phrase id="reports_preset">Vorgefertigte Reporte</epp:phrase>
+<epp:phrase id="reports_custom">Eigene Reporte</epp:phrase>
 
 <epp:phrase id="Report:sort_links"><div class="ep_view_group_by">Sortieren nach: <epc:pin name="links" /></div></epp:phrase>
 <epp:phrase id="Report:group_links"><div class="ep_view_group_by">Gruppieren nach: <epc:pin name="links" /></div></epp:phrase>

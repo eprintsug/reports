@@ -41,9 +41,9 @@
           <datasetid>document</datasetid>
           <filename>plugins/EPrints/Plugin/Export/Grid2.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>83d730999923d798d1acbb44c4a91667</hash>
+          <hash>6699a48d6ff758192b7ab8ff05790b3f</hash>
           <hash_type>MD5</hash_type>
-          <filesize>10222</filesize>
+          <filesize>10355</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
@@ -89,17 +89,17 @@
           <datasetid>document</datasetid>
           <filename>plugins/EPrints/Plugin/Export/Report/JSON.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>3786d272e437a488408e5825270e1609</hash>
+          <hash>c4b031c985ca0de7c8263474b232be14</hash>
           <hash_type>MD5</hash_type>
-          <filesize>6648</filesize>
+          <filesize>6994</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>e88058df69ea1db3f145b316f6d1ada2</hash>
+          <hash>d694685745fab90a5d9960238240662a</hash>
           <hash_type>MD5</hash_type>
-          <filesize>43956</filesize>
+          <filesize>43946</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
@@ -187,7 +187,7 @@
       <content>coverimage</content>
     </document>
   </documents>
-  <version>3.2</version>
+  <version>3.3</version>
   <creators>
     <item>
       <name>

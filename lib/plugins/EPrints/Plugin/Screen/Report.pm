@@ -728,7 +728,7 @@ sub render_controls
                 onclick => "clearForm();",
                 class => "ep_form_action_button clear_button",
                 ) );
-        $clear_btn->appendChild( $xml->create_text_node( $self->{session}->html_phrase( "lib/searchexpression:action_reset" ) ) );
+        $clear_btn->appendChild( $xml->create_text_node( $self->{session}->phrase( "lib/searchexpression:action_reset" ) ) );
 	return $div;
 }
 
@@ -892,7 +892,7 @@ sub render_export_bar
 	                    onclick => "toggleCheckboxes();",
 	                    class => "ep_form_action_button select_button",
 		) );
-	    	$select_btn->appendChild( $xml->create_text_node( $repo->html_phrase( "report_select" ) ) );
+	    	$select_btn->appendChild( $xml->create_text_node( $repo->phrase( "report_select" ) ) );
 
 		#allow user to choose which fields they want to export
 		my $export_options = $repo->make_element( "div" );

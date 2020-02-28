@@ -58,7 +58,7 @@ sub header_row
 	{
 		if( defined $opts{custom_export} && defined $opts{custom_export}->{$f} )
                 {
-                	push @names, $ds->repository->html_phrase( "exportfieldoptions:$f" );
+                	push @names, $ds->repository->phrase( "exportfieldoptions:$f" );
                 }
 		else
 		{
@@ -66,7 +66,7 @@ sub header_row
 
 			if ($field->isa("EPrints::MetaField::Multipart"))
 			{
-				my $parent_name = $field->render_name;
+				my $parent_name = $field->display_name( $field->repository );
 				if( $field->isa( "EPrints::MetaField::Name" )) #need to deal with legacy phrase id's
 				{
 					foreach my $bit ( $field->get_input_bits() )
@@ -76,11 +76,11 @@ sub header_row
 						my $custom_phrase = $field->name . "_" . $bit;
 						if( $ds->repository->get_lang->has_phrase( $custom_phrase ) ) #allow a custom phrase to be used
 						{
-							push @names, $ds->repository->html_phrase( $custom_phrase );
+							push @names, $ds->repository->phrase( $custom_phrase );
 						}
 						else
 						{
-                                                	push @names, $parent_name . ": " . $ds->repository->html_phrase( "lib/metafield:".$bit );
+                                                	push @names, $parent_name . ": " . $ds->repository->phrase( "lib/metafield:".$bit );
 						}
                                         }
 				}
@@ -99,17 +99,17 @@ sub header_row
 					my $custom_phrase = $field->name . "_" . $sub_field->name;
 					if( $ds->repository->get_lang->has_phrase( $custom_phrase ) ) #allow a custom phrase to be used
                                         {
-                                        	push @names, $ds->repository->html_phrase( $custom_phrase );
+                                        	push @names, $ds->repository->phrase( $custom_phrase );
                                         }
 					else
 					{
-						push @names, $field->render_name . ": " . $sub_field->render_name;
+						push @names, $field->display_name( $field->repository ) . ": " . $sub_field->display_name( $sub_field->repository );
 					}
 				}
 			}
 			else
 			{
-				push @names, $field->render_name;
+				push @names, $field->display_name( $field->repository );
 			}
 		}
 	}		
@@ -300,7 +300,7 @@ sub value_to_rows
         {
                 if( $value ne "" )
                 {
-                        push @rows, [$field->render_single_value( $field->repository, $value )];
+                        push @rows, [EPrints::Utils::tree_to_utf8( $field->render_single_value( $field->repository, $value ) )];
                 }
                 else
                 {
@@ -309,7 +309,8 @@ sub value_to_rows
         }
 	elsif( !$field->isa("EPrints::MetaField::Subobject") && $field->is_virtual )
 	{
-		push @rows, [$dataobj->render_value( $field->name )];
+		#push @rows, [$dataobj->render_value( $field->name )];
+		push @rows, [$value];
 	}
 	else
 	{

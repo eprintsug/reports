@@ -154,45 +154,49 @@ sub _epdata_to_json
 
                 foreach my $fieldname ( @{$self->{exportfields}} )
                 {
-			my @fnames = split( /\./, $fieldname );
-                        if( scalar( @fnames > 1 ) ) #a field of another dataset, e.g. documents.content
+                    my @fnames = split( /\./, $fieldname );
+                    if( scalar( @fnames > 1 ) ) #a field of another dataset, e.g. documents.content
+                    {
+				        my $field = $self->{dataset}->get_field( $fnames[0] ); #first get the field
+                        if( $field->is_type( "subobject", "itemref" ) ) #if thee field belongs to another dataset
                         {
-				my $field = $self->{dataset}->get_field( $fnames[0] ); #first get the field
-                                if( $field->is_type( "subobject", "itemref" ) ) #if thee field belongs to another dataset
-                                {
-					my $subsubdata = $subdata->{$fnames[0]} || []; #create an array for the sub ojects
-                                	my $dataobjs= $epdata->value( $fnames[0] ); #get the dataobjects this field represents
-					for (my $i=0; $i < scalar( @{$dataobjs} ); $i++)
-					{
-						my $obj = @{$dataobjs}[$i]; #get the value from the dataobject			
-						my $value = $obj->value( $fnames[1] );
-						next if !EPrints::Utils::is_set( $value );
+					        my $subsubdata = $subdata->{$fnames[0]} || []; #create an array for the sub ojects
+                            my $dataobjs= $epdata->value( $fnames[0] ); #get the dataobjects this field represents
+					        for (my $i=0; $i < scalar( @{$dataobjs} ); $i++)
+					        {
+						        my $obj = @{$dataobjs}[$i]; #get the value from the dataobject			
+						        my $value = $obj->value( $fnames[1] );
+						        next if !EPrints::Utils::is_set( $value );
 
-						my $subsubsubdata = $subdata->{$fnames[0]}[$i] || {};
-						$subsubsubdata->{$fnames[1]} = $value;		
+						        my $subsubsubdata = $subdata->{$fnames[0]}[$i] || {};
+						        $subsubsubdata->{$fnames[1]} = $value;		
 
-						$subdata->{$fnames[0]}[$i] = $subsubsubdata;					
-                                        }                                   
-                               }
-			}
-			else
-			{
-				my $field = $self->{dataset}->get_field( $fieldname );
+						        $subdata->{$fnames[0]}[$i] = $subsubsubdata;					
+                            }                                   
+                        }
+			        }
+			        else
+			        {
+                        if( defined $repo->config( $self->{report}->{export_conf}, "custom_export" ) &&
+					        exists $repo->config( $self->{report}->{export_conf}, "custom_export" )->{$fieldname} )
+        	            {
+					        my $value = $repo->config( $self->{report}->{export_conf}, "custom_export" )->{$fieldname}->( $epdata, $self->{report} );
+	       	                $subdata->{$fieldname} = $value;		        
+                        }
+                        else
+                        {
+				            my $field = $self->{dataset}->get_field( $fieldname );
 	                        next if !$field->get_property( "export_as_xml" );
         	                next if defined $field->{sub_name};
-				my $value = $field->get_value( $epdata );
-				if( defined $repo->config( $self->{report}->{export_conf}, "custom_export" ) &&
-					exists $repo->config( $self->{report}->{export_conf}, "custom_export" )->{$field->get_name} )
-        	                {
-					$value = $repo->config( $self->{report}->{export_conf}, "custom_export" )->{$field->get_name}->( $epdata, $self->{report} );
-				}
-				if( defined $field->{virtual} )
-				{
-					$value = EPrints::Utils::tree_to_utf8( $epdata->render_value( $field->get_name ) );
-				}
-		                next if !EPrints::Utils::is_set( $value );
+				            my $value = $field->get_value( $epdata );
+				        	if( defined $field->{virtual} )
+				            {
+					            $value = EPrints::Utils::tree_to_utf8( $epdata->render_value( $field->get_name ) );
+				            }
+		                    next if !EPrints::Utils::is_set( $value );
         	                $subdata->{$field->get_name} = $value;
-			}
+                        }
+			        }
                 }
                 $subdata->{uri} = $epdata->uri;
 

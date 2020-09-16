@@ -114,6 +114,12 @@ div#ep_report_export_content_inner .report_export_options ul
         margin-left: 2px;
 }
 
+#report_select_label, #export_select_label
+{
+    font-weight: 700;
+    margin-right: 5px;
+}
+
 /* HTML Reports */
 a.html_report_print{
 	text-decoration: none;	

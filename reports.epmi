@@ -33,9 +33,9 @@
           <datasetid>document</datasetid>
           <filename>lang/en/phrases/reports.xml</filename>
           <mime_type>application/xml</mime_type>
-          <hash>f344518160d45ccd1d1709a926d9e6d1</hash>
+          <hash>e039be104215776aa32fecaa24ed3d59</hash>
           <hash_type>MD5</hash_type>
-          <filesize>2563</filesize>
+          <filesize>2701</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
@@ -97,9 +97,9 @@
           <datasetid>document</datasetid>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>d694685745fab90a5d9960238240662a</hash>
+          <hash>2c4683e23b226dbc06eda9f63d03a1bc</hash>
           <hash_type>MD5</hash_type>
-          <filesize>43946</filesize>
+          <filesize>44999</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
@@ -153,17 +153,17 @@
           <datasetid>document</datasetid>
           <filename>static/javascript/auto/reports.js</filename>
           <mime_type>text/plain</mime_type>
-          <hash>d02c8742a8d57f71e94e1c62635b94de</hash>
+          <hash>71e1a869fbb7241f7fcc4027acc5a6f8</hash>
           <hash_type>MD5</hash_type>
-          <filesize>12701</filesize>
+          <filesize>12708</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
           <filename>static/style/auto/reports.css</filename>
           <mime_type>text/x-asm</mime_type>
-          <hash>04cbc93d0515c56f56929cd6a16f5a44</hash>
+          <hash>ea07a35607af90bafc7aed4c77da1242</hash>
           <hash_type>MD5</hash_type>
-          <filesize>2151</filesize>
+          <filesize>2244</filesize>
         </file>
       </files>
       <mime_type>text/x-asm</mime_type>
@@ -187,7 +187,7 @@
       <content>coverimage</content>
     </document>
   </documents>
-  <version>3.3</version>
+  <version>3.4</version>
   <creators>
     <item>
       <name>

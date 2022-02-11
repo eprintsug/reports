@@ -17,6 +17,8 @@ $c->{plugins}{"Screen::Report::EPrint"}{params}{custom} = 1;
 $c->{plugins}{"Screen::Report::User"}{params}{disable} = 0;
 $c->{plugins}{"Screen::Report::User"}{params}{custom} = 1;
 
+$c->{reports}->{csv_utf8_bom} = 1;
+
 #set config for default eprint report
 $c->{search}->{eprint_report} = $c->{search}->{advanced}; #use the advanced search form as the default eprint report search
 

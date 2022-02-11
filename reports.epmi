@@ -17,9 +17,9 @@
           <datasetid>document</datasetid>
           <filename>epm/reports/cfg/cfg.d/z_reports.pl</filename>
           <mime_type>text/plain</mime_type>
-          <hash>48c622ad150bea255ba6fbee7e37083b</hash>
+          <hash>e0c09c35dc9b17fa48a00ad0555653fc</hash>
           <hash_type>MD5</hash_type>
-          <filesize>2869</filesize>
+          <filesize>2905</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
@@ -65,9 +65,9 @@
           <datasetid>document</datasetid>
           <filename>plugins/EPrints/Plugin/Export/Report/CSV.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>9ca03f1aa33ed8390c18f29c2ed96d16</hash>
+          <hash>197a1e34988fac693a4f2825cfc823d0</hash>
           <hash_type>MD5</hash_type>
-          <filesize>1785</filesize>
+          <filesize>2084</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
@@ -187,7 +187,7 @@
       <content>coverimage</content>
     </document>
   </documents>
-  <version>3.4</version>
+  <version>3.4.1</version>
   <creators>
     <item>
       <name>

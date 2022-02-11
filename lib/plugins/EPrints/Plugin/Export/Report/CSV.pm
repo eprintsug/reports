@@ -20,9 +20,23 @@ sub new
 	return $self;
 }
 
+sub initialise_fh
+{
+    my( $plugin, $fh ) = @_;
+
+    $plugin->SUPER::initialise_fh( $fh );
+
+    # include UTF-8 byte order marker so Excel knows how to display the conten
+    my $repo = $plugin->repository;
+    if( $repo->config( "reports", "csv_utf8_bom" ) )
+    {
+        print $fh chr(65279);
+    }
+}
+
 sub output_list
 {
-        my( $plugin, %opts ) = @_;     
+	my( $plugin, %opts ) = @_;     
 
 	my $repo = $plugin->repository;
 

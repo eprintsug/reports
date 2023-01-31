@@ -97,9 +97,9 @@
           <datasetid>document</datasetid>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>2c4683e23b226dbc06eda9f63d03a1bc</hash>
+          <hash>76ae03abfa9314aa25371d44e8486945</hash>
           <hash_type>MD5</hash_type>
-          <filesize>44999</filesize>
+          <filesize>45432</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
@@ -187,7 +187,7 @@
       <content>coverimage</content>
     </document>
   </documents>
-  <version>3.4.1</version>
+  <version>3.4.2</version>
   <creators>
     <item>
       <name>

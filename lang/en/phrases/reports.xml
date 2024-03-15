@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE phrases SYSTEM "entities.dtd">
+<epp:phrases xmlns="http://www.w3.org/1999/xhtml" xmlns:epp="http://eprints.org/ep3/phrase" xmlns:epc="http://eprints.org/ep3/control">
+
+<epp:phrase id="lib/report:loading">Loading report...</epp:phrase>
+
+<epp:phrase id="Plugin/Screen/Report:title">Reports</epp:phrase>
+<epp:phrase id="Plugin/Screen/Report:no_reports">No available reports</epp:phrase>
+
+<epp:phrase id="reports_preset">Preset Reports</epp:phrase>
+<epp:phrase id="reports_custom">Custom Reports</epp:phrase>
+
+<epp:phrase id="Report:sort_links"><div class="ep_view_group_by">Sort by: <epc:pin name="links" /></div></epp:phrase>
+<epp:phrase id="Report:group_links"><div class="ep_view_group_by">Group by: <epc:pin name="links" /></div></epp:phrase>
+
+<epp:phrase id="report:no_grouping">No Grouping</epp:phrase>
+
+<epp:phrase id="report_select">Select/Deselect All</epp:phrase>
+
+<epp:phrase id="Report:search_links"><div class="ep_view_group_by"><epc:pin name="links" /></div></epp:phrase>
+
+<epp:phrase id="report_select_label">Select Report:</epp:phrase>
+<epp:phrase id="export_select_label">Select Export Format:</epp:phrase>
+
+<!-- the Example reports -->
+<epp:phrase id="Plugin/Screen/Report/Example:title">Example</epp:phrase>
+<epp:phrase id="Plugin/Screen/Report/Example/Articles:title">Articles</epp:phrase>
+<epp:phrase id="Plugin/Screen/Report/Example/ConferenceItems:title">Conference Items</epp:phrase>
+
+<epp:phrase id="export_title">Export Options</epp:phrase>
+
+<!-- HTML Export -->
+<epp:phrase id="report_html_export_title">Report</epp:phrase>
+<epp:phrase id="report_html_print_btn"><a href="javascript:window.print()" class="ep_form_action_button html_report_print ep_noprint">Print</a></epp:phrase>
+
+<!-- EPrint Report -->
+<epp:phrase id="Plugin/Screen/Report/EPrint:title">EPrints</epp:phrase>
+<epp:phrase id="exportfields:eprint_report_core">Export Fields</epp:phrase>
+<epp:phrase id="eprint_report:sort:byyear">Year</epp:phrase>
+<epp:phrase id="eprint_report:sort:byname">Creators</epp:phrase>
+<epp:phrase id="eprint_report:sort:bytitle">Title</epp:phrase>
+<epp:phrase id="eprint_report:sort:bydivision">Division</epp:phrase>
+
+<epp:phrase id="eprint_report:group:divisions">Division</epp:phrase>
+<epp:phrase id="eprint_report:group:subjects">Subject</epp:phrase>
+<epp:phrase id="eprint_report:group:type">Item Type</epp:phrase>
+<epp:phrase id="eprint_report:group:date">Date</epp:phrase>
+
+<!-- User Report -->
+<epp:phrase id="Plugin/Screen/Report/User:title">Users</epp:phrase>
+<epp:phrase id="exportfields:user_report_core">Export Fields</epp:phrase>
+<epp:phrase id="user_report:sort:byname">Name</epp:phrase>
+
+</epp:phrases>

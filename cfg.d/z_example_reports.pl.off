@@ -1,0 +1,42 @@
+
+$c->{plugins}{"Screen::Report::Example"}{params}{disable} = 0;
+$c->{plugins}{"Screen::Report::Example::Articles"}{params}{disable} = 0;
+$c->{plugins}{"Screen::Report::Example::ConferenceItems"}{params}{disable} = 0;
+
+$c->{plugins}{"Export::Report::CSV::Example"}{params}{disable} = 0;
+
+my @example_fields = (
+	{
+		target => "EPrint ID",
+		source => "eprint.eprintid",
+		validate => "required",
+	},
+	{
+		target => "Title",
+		# just to demonstrate getting data via a sub {}
+		source => sub {
+			my( $plugin, $objects ) = @_;
+
+			my $eprint = $objects->{eprint};
+			return $eprint->value( 'title' );
+		},
+		validate => sub {
+			my( $plugin, $objects, $problems ) = @_;
+
+			my $eprint = $objects->{eprint};
+
+			if( $eprint->value( 'title' ) =~ /the/i )
+			{
+				push @$problems, "Problems detected!!";
+			}
+		}
+	},
+);
+
+$c->{reports}->{"example-articles"}->{fields} = [ map { $_->{target} } @example_fields ];
+$c->{reports}->{"example-articles"}->{mappings} = { map { $_->{target} => $_->{source} } @example_fields };
+$c->{reports}->{"example-articles"}->{validate} = { map { $_->{target} => $_->{validate} } @example_fields };
+
+$c->{reports}->{"example-conf-items"}->{fields} = [ map { $_->{target} } @example_fields ];
+$c->{reports}->{"example-conf-items"}->{mappings} = { map { $_->{target} => $_->{source} } @example_fields };
+$c->{reports}->{"example-conf-items"}->{validate} = { map { $_->{target} => $_->{validate} } @example_fields };

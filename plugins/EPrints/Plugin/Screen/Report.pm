@@ -113,7 +113,13 @@ sub _create_search
   	return if ! defined $report_plugin->{searchdatasetid};
 	$self->{processor}->{report_plugin} = $report_plugin;
 
-        my $report_ds = $session->dataset( $report_plugin->{searchdatasetid} );
+        my $searchdatasetid = $report_plugin->{searchdatasetid};
+        if( defined $report_plugin->param("searchdatasetid") )
+        {
+            $searchdatasetid = $report_plugin->param("searchdatasetid");
+        }
+
+        my $report_ds = $session->dataset( $searchdatasetid );
         if( defined $report_ds )
         {
                 $self->{processor}->{datasetid} = $report_ds->base_id;
@@ -602,7 +608,12 @@ sub render_splash_page
 
 			#create search form			
 			#get report dataset and appropriate search config
-			my $report_ds = $repo->dataset( $report_plugin->{searchdatasetid} );
+            my $searchdatasetid = $report_plugin->{searchdatasetid};
+            if( defined $report_plugin->param("searchdatasetid") )
+            {
+                $searchdatasetid = $report_plugin->param("searchdatasetid");
+            }    
+			my $report_ds = $repo->dataset( $searchdatasetid );
 			my $sconf = $report_ds->search_config( $report_plugin->{sconf} ) ;
 			#my $search = EPrints::Search->new(
 		        #        keep_cache => 1,

@@ -29,29 +29,10 @@ var initReportForm = function(){
 var onFormSelect = function(){
 	//get form id
 	var formid = this.options[this.selectedIndex].getAttribute('form');
-	
-	//hide other forms
-	$$('div.ep_table.ep_search_fields').each(function (elem) 
-	{	
-		//hide the form
-		$(elem).hide();
-		$(elem).removeClassName("selected_form");
-		$(elem).select('input').each(function (input)
-		{
-			$(input).setAttribute("disabled", "disabled");
-		});
-	});
-		
-	//show the form we want
-	$(formid).show();
-	$(formid).addClassName("selected_form");
-
-	//enable this form's input elements
-	$(formid).select('input').each(function (input)
-	{
-		$(input).removeAttribute("disabled");
-	});
-
+    const container = document.getElementById("form_container");
+    container.innerHTML = '';
+    const clone = $(formid).content.cloneNode(true);
+    container.appendChild(clone);
 };
 
 // Used by the Screen::Report::render method

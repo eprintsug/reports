@@ -581,7 +581,7 @@ sub render_splash_page
 
 	#add each report to the select component and generate search form if required
 	my $report_select = $repo->make_element( "select", name=>"report", id=>"select_report", 'aria-labelledby' => "report_select_label" );
-	my %search_forms;
+	my @search_forms;
 	my $custom_reports = 0;
 	#foreach my $report_plugin ( @plugins )
 	foreach my $report_plugin ( sort { $a->get_subtype cmp $b->get_subtype } @plugins )
@@ -605,6 +605,9 @@ sub render_splash_page
 			#set option text and add to select
   			$option->appendChild( $report_plugin->render_title );
 			$report_select->appendChild( $option );
+
+            # now we've added to the select, do we need to render a search form
+            next if (grep { $formid eq $_ } @search_forms );     
 
 			#create search form			
 			#get report dataset and appropriate search config
@@ -637,7 +640,15 @@ sub render_splash_page
 
 			#generate the form
 			my $frag = $self->render_search_fields( $searchexp, $formid );
-			$search_forms{$formid} = $frag unless exists $search_forms{$formid};
+
+            my $template = $repo->make_element( "template", id => $formid );
+            my $table = $repo->make_element( "div", class=>"ep_table ep_search_fields", id=>"form_$formid" );
+            $table->appendChild( $frag );
+            $template->appendChild( $table );
+            $custom->appendChild( $template );
+
+            # keep a record of this search form to save us from rendering it again
+            push @search_forms, $formid;
 		}	
 	}
 
@@ -645,20 +656,14 @@ sub render_splash_page
     my $report_label = $repo->make_element( "label", id=>"report_select_label" );
     $report_label->appendChild( $repo->html_phrase( "report_select_label" ) );
     $form->appendChild( $report_label );
-
 	$form->appendChild( $report_select );
-	$form->appendChild( $repo->render_hidden_field( "screen", $self->{screenid} ) );
-
-	#render possible search forms
-	foreach my $formid (keys %search_forms)
-	{
-		my $table = $repo->make_element( "div", class=>"ep_table ep_search_fields", id=>$formid, style=>"display: none" );
-	        $form->appendChild( $table );
-	        $table->appendChild( $search_forms{$formid} );
-	}
-
-	$form->appendChild( $self->render_controls );
-	$custom->appendChild( $form );
+	
+    $form->appendChild( $repo->render_hidden_field( "screen", $self->{screenid} ) );
+    $form->appendChild( $repo->make_element( "div", id=>"form_container" ) );
+	
+    $form->appendChild( $self->render_controls );
+	
+    $custom->appendChild( $form );
 
 	#javascript for changing forms based on report selection
 	$custom->appendChild( $repo->make_javascript( 'initReportForm();' ) );
@@ -1048,7 +1053,7 @@ sub render_sort_options
 
 		if( !$first )
                 {
-                	$sort_links->appendChild( $repo->html_phrase( "Update/Views:group_seperator" ) );
+                	$sort_links->appendChild( $repo->html_phrase( "Update/Views:group_separator" ) );
                 }
 		
 		if( defined $self->{processor}->{sort} && $self->{processor}->{sort} eq $sort_value )
@@ -1110,7 +1115,7 @@ sub render_group_options
 
 		if( !$first )
                 {
-                	$group_links->appendChild( $repo->html_phrase( "Update/Views:group_seperator" ) );
+                	$group_links->appendChild( $repo->html_phrase( "Update/Views:group_separator" ) );
                 }
 		
 		if( defined $self->{processor}->{group} && $self->{processor}->{group} eq $group_field )
@@ -1129,7 +1134,7 @@ sub render_group_options
         }           
 	
 	#no grouping link at the end
-	$group_links->appendChild( $repo->html_phrase( "Update/Views:group_seperator" ) );
+	$group_links->appendChild( $repo->html_phrase( "Update/Views:group_separator" ) );
 	if( defined $self->{processor}->{group} && $self->{processor}->{group} ne "" )
 	{
 		my $link = $repo->render_link( 'javascript:group_report("")' );	
@@ -1175,7 +1180,7 @@ sub render_refine_search
 		$search_links->appendChild( $new_link );
 
 		#add a separator...
-		$search_links->appendChild( $repo->html_phrase( "Update/Views:group_seperator" ) );
+		$search_links->appendChild( $repo->html_phrase( "Update/Views:group_separator" ) );
 
 		#set up refine search link
 		my $refine_baseurl = URI->new( $self->{session}->get_uri );
@@ -1562,7 +1567,6 @@ sub render_clearform
 			for( input of inputs )
 			{
 				field_type = input.type.toLowerCase();	
-				console.log(field_type);
 				switch (field_type)
 				{
 				case "text":

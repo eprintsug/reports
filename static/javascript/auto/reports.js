@@ -201,7 +201,19 @@ var EPrints_Screen_Report_Loader = Class.create({
                         {
                             this.total_noncompliant++;
                         }
-                                
+ 
+                        //add support for compliant items to include bullet points too
+                        if( entry.bullets && entry.bullets.length )
+                        {
+                            var bullets_el = target_el.appendChild( new Element( 'ul', { 'class': 'ep_report_row_bullets' } ) );
+
+                            for( var b = 0; b < entry.bullets.length; b++ )
+                            {
+                                var li = bullets_el.appendChild( new Element( 'li' ));
+                                li.update( entry.bullets[b] );
+                            }
+                        }
+
                         if( entry.problems && entry.problems.length )
                         {
                             var problems_el = target_el.appendChild( new Element( 'ul', { 'class': 'ep_report_row_problems' } ) );
@@ -211,20 +223,6 @@ var EPrints_Screen_Report_Loader = Class.create({
                                 var li = problems_el.appendChild( new Element( 'li' ));
                                 li.update( entry.problems[p] );
                             }                               
-                        }
-                        else
-                        {
-                            //add support for compliant items to include bullet points too
-                            if( entry.bullets && entry.bullets.length )
-                            {
-                                var bullets_el = target_el.appendChild( new Element( 'ul', { 'class': 'ep_report_row_bullets' } ) );
-
-                                for( var b = 0; b < entry.bullets.length; b++ )
-                                {
-                                    var li = bullets_el.appendChild( new Element( 'li' ));
-                                    li.update( entry.bullets[b] );
-                                }
-                            }
                         }
 
                         //display state

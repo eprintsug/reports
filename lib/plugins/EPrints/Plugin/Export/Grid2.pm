@@ -139,7 +139,7 @@ sub dataobj_to_rows
                 {
 			$field = $ds->get_field( $fnames[0] ); #first get the field
 			if( $field->is_type( "subobject", "itemref" ) ) #if the field belongs to another dataset
-                        {
+            {
 				my $sub_ds_id = $field->get_property( "datasetid" );
 				my $multiple = $field->get_property( "multiple" );
 				if( $multiple )
@@ -147,16 +147,16 @@ sub dataobj_to_rows
 					my @sub_dataobjs;
 					#get the dataobjs of this field
 					if( $sub_ds_id eq "document" ) #documents represent a special case of sub object - we don't want volatile documents (probably)
-                                        {	
-						@sub_dataobjs = $dataobj->get_all_documents;
-                                        }
-                                        else
-                                        {
-						foreach my $sub_obj ( @{$dataobj->value( $fnames[0] )} )
-						{
-							push @sub_dataobjs, $field->get_item( $dataobj->repository, $sub_obj );
-						}
-                                        }
+                    {
+                        @sub_dataobjs = $dataobj->get_all_documents;
+                    }
+                    else
+                    {
+                        foreach my $sub_obj ( @{$dataobj->value( $fnames[0] )} )
+                        {
+                            push @sub_dataobjs, $field->get_item( $dataobj->repository, $sub_obj );
+                        }
+                    }
 					
 					#and build up an array of these sub dataobj's values
 					foreach my $obj ( @sub_dataobjs ) #get the values we are requesting of the dataobjects
@@ -184,13 +184,22 @@ sub dataobj_to_rows
 				}
 				else #we only have one sub-object, 
 				{
-					my $sub_obj = $field->get_item( $dataobj->repository, $dataobj->value( $fnames[0] ) ); #get the subobject
-					$field = EPrints::Utils::field_from_config_string( $sub_obj->dataset, $fnames[1] ); #get the subobjects field
-					my $value = $field->get_value( $sub_obj ); #get the subobjects value for this field
-					push @{$sub_dataobj_values}, $value;						
-				}
-			}
-		}
+                    my $sub_obj;
+                    if( ref( $field ) eq "EPrints::MetaField::Subobject" )
+                    {
+                        $sub_obj = $dataobj->value( $fnames[0] );
+                    }
+                    else # do it the original way (assuming this ever worked...?
+                    {
+                        $sub_obj = $field->get_item( $dataobj->repository, $dataobj->value( $fnames[0] ) ); #get the subobject
+                    }
+                     
+                    $field = EPrints::Utils::field_from_config_string( $sub_obj->dataset, $fnames[1] ); #get the subobjects field
+                    my $value = $field->get_value( $sub_obj ); #get the subobjects value for this field
+                    push @{$sub_dataobj_values}, $value;
+                }
+            }
+        }
 
 		my $i = @{$rows[0]};
 		my $_rows;

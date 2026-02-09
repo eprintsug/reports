@@ -41,9 +41,9 @@
           <datasetid>document</datasetid>
           <filename>plugins/EPrints/Plugin/Export/Grid2.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>6699a48d6ff758192b7ab8ff05790b3f</hash>
+          <hash>eb6a305221d7fed1b0ed70ef86206367</hash>
           <hash_type>MD5</hash_type>
-          <filesize>10355</filesize>
+          <filesize>10782</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
@@ -97,9 +97,9 @@
           <datasetid>document</datasetid>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>76ae03abfa9314aa25371d44e8486945</hash>
+          <hash>a76848e873791f84698b90d0ed1cb3ea</hash>
           <hash_type>MD5</hash_type>
-          <filesize>45432</filesize>
+          <filesize>45726</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
@@ -153,9 +153,9 @@
           <datasetid>document</datasetid>
           <filename>static/javascript/auto/reports.js</filename>
           <mime_type>text/plain</mime_type>
-          <hash>71e1a869fbb7241f7fcc4027acc5a6f8</hash>
+          <hash>058ab00d3be58f69cb6f9f3e6d7625f9</hash>
           <hash_type>MD5</hash_type>
-          <filesize>12708</filesize>
+          <filesize>16024</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
@@ -187,7 +187,7 @@
       <content>coverimage</content>
     </document>
   </documents>
-  <version>3.4.2</version>
+  <version>3.4.3</version>
   <creators>
     <item>
       <name>

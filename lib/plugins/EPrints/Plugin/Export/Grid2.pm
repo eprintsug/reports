@@ -54,6 +54,37 @@ sub header_row
     my $ds = $opts{list}->{dataset};
 
     my @names;
+
+    # option to not use phrases and just use field names
+    my $use_ids = $opts{plugin}->{use_ids} ||= 0;
+    if( $use_ids )
+    {
+        foreach my $f (@$fields)
+        {            
+            if( defined $opts{custom_export} && defined $opts{custom_export}->{$f} )
+            {
+                push @names, $f;
+            }
+            else
+            {
+                my $field = EPrints::Utils::field_from_config_string( $ds, $f );
+                if( $field->isa( "EPrints::MetaField::Multipart" ) )
+                {
+                    my $name = $field->name;
+                    push @names, map {
+                        $name . '.' . $_->{sub_name}
+                    } @{$field->property("fields_cache")};
+                }
+                else
+                {
+                    push @names, $field->name;
+                }
+            }
+        }
+        return @names;
+    }
+
+    # else we use phrases
     foreach my $f (@$fields)
     {
         if( defined $opts{custom_export} && defined $opts{custom_export}->{$f} )
@@ -67,7 +98,7 @@ sub header_row
             if ($field->isa("EPrints::MetaField::Multipart"))
             {
                 my $parent_name = $field->display_name( $field->repository );
-                if( $field->isa( "EPrints::MetaField::Name" )) #need to deal with legacy phrase id's
+                if( $field->isa( "EPrints::MetaField::Name" )) # need to deal with legacy phrase id's
                 {
                     foreach my $bit ( $field->get_input_bits() )
                     {

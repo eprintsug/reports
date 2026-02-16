@@ -4,6 +4,8 @@
 
 <epp:phrase id="lib/report:loading">Loading report...</epp:phrase>
 
+<epp:phrase id="Update/Views:group_separator"> | </epp:phrase>
+
 <epp:phrase id="Plugin/Screen/Report:title">Reports</epp:phrase>
 <epp:phrase id="Plugin/Screen/Report:no_reports">No available reports</epp:phrase>
 

@@ -1005,7 +1005,7 @@ sub render_export_bar
         $options{show_icon_url} = "$imagesurl/multi_down.png";
 	$options{hide_icon_url} = "$imagesurl/multi_up.png";
 
-	my $box = $repo->make_element( "div", style=>"text-align: left" );
+	my $box = $repo->make_element( "div", style=>"text-align: left", class=>$self->{report} );
 	$box->appendChild( EPrints::Box::render( %options ) );
 	$chunk->appendChild( $box );
 
@@ -1217,10 +1217,15 @@ sub _export_field_checkbox
 	{
 		if( ( grep { $fieldname eq $_ } @{$repo->config( $self->{export_conf}, "exportfield_defaults" )} ) || ( scalar( @{$repo->config( $self->{export_conf}, "exportfield_defaults" )} ) == 0 ) )
 		{
-			#only check defaults or check everything if defaults not defined
+			# check defaults as specified
 			$checkbox->setAttribute( "checked", "yes" );
 		}
 	}
+    else # defaults not defined
+    {
+        $checkbox->setAttribute( "checked", "yes" );
+    }
+
 	my $label = $repo->make_element( "label", for => $fieldname );
 	$label->appendChild( $fieldlabel );
 

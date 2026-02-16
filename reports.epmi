@@ -33,17 +33,17 @@
           <datasetid>document</datasetid>
           <filename>lang/en/phrases/reports.xml</filename>
           <mime_type>application/xml</mime_type>
-          <hash>e039be104215776aa32fecaa24ed3d59</hash>
+          <hash>ea18f8beec4a6fdaa4c1d0e588b38b55</hash>
           <hash_type>MD5</hash_type>
-          <filesize>2701</filesize>
+          <filesize>2765</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
           <filename>plugins/EPrints/Plugin/Export/Grid2.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>eb6a305221d7fed1b0ed70ef86206367</hash>
+          <hash>83bb520ae07653dfb9292460794a23fa</hash>
           <hash_type>MD5</hash_type>
-          <filesize>10782</filesize>
+          <filesize>13575</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
@@ -97,9 +97,9 @@
           <datasetid>document</datasetid>
           <filename>plugins/EPrints/Plugin/Screen/Report.pm</filename>
           <mime_type>text/plain</mime_type>
-          <hash>a76848e873791f84698b90d0ed1cb3ea</hash>
+          <hash>3f96896809763ee15750ac37e2c1b899</hash>
           <hash_type>MD5</hash_type>
-          <filesize>45726</filesize>
+          <filesize>45813</filesize>
         </file>
         <file>
           <datasetid>document</datasetid>
@@ -187,7 +187,7 @@
       <content>coverimage</content>
     </document>
   </documents>
-  <version>3.4.3</version>
+  <version>3.4.4</version>
   <creators>
     <item>
       <name>

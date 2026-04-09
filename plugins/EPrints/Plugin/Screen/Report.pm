@@ -1217,7 +1217,7 @@ sub _export_field_checkbox
 	{
 		if( ( grep { $fieldname eq $_ } @{$repo->config( $self->{export_conf}, "exportfield_defaults" )} ) || ( scalar( @{$repo->config( $self->{export_conf}, "exportfield_defaults" )} ) == 0 ) )
 		{
-            # check defaults as specified
+			# check defaults as specified
 			$checkbox->setAttribute( "checked", "yes" );
 		}
 	}

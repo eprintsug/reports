@@ -71,9 +71,19 @@ sub header_row
                 if( $field->isa( "EPrints::MetaField::Multipart" ) )
                 {
                     my $name = $field->name;
-                    push @names, map {
-                        $name . '.' . $_->{sub_name}
-                    } @{$field->property("fields_cache")};
+                    if( $field->isa( "EPrints::MetaField::Name" ) )
+                    {
+                        foreach my $bit ( $field->get_input_bits() )
+                        {
+                             push @names,$name . '.' . $bit;
+                        }
+                    }
+                    else
+                    {                        
+                        push @names, map {
+                            $name . '.' . $_->{sub_name}
+                        } @{$field->property("fields_cache")};
+                    }
                 }
                 else
                 {
